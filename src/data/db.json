@@ -1,0 +1,60 @@
+{
+  "clients": [
+    {
+      "id": "1",
+      "name": "Acme Corporation",
+      "email": "contact@acme.com",
+      "phone": "+1 234-567-8901",
+      "address": "123 Business Ave, Suite 100",
+      "projects": [
+        {
+          "id": "p1",
+          "name": "Website Redesign",
+          "status": "in-progress",
+          "startDate": "2024-01-15",
+          "endDate": "2024-06-30",
+          "budget": 50000,
+          "description": "Complete redesign of the company website with modern UI/UX"
+        }
+      ]
+    },
+    {
+      "id": "2",
+      "name": "Tech Solutions Inc",
+      "email": "info@techsolutions.com",
+      "phone": "+1 345-678-9012",
+      "address": "456 Tech Park, Building 2",
+      "projects": [
+        {
+          "id": "p2",
+          "name": "Mobile App Development",
+          "status": "completed",
+          "startDate": "2023-09-01",
+          "endDate": "2024-02-15",
+          "budget": 75000,
+          "description": "Development of a cross-platform mobile application"
+        }
+      ]
+    }
+  ],
+  "transactions": [
+    {
+      "id": "t1",
+      "clientId": "1",
+      "projectId": "p1",
+      "amount": 15000,
+      "date": "2024-01-15",
+      "type": "invoice",
+      "description": "Initial payment for website redesign"
+    },
+    {
+      "id": "t2",
+      "clientId": "2",
+      "projectId": "p2",
+      "amount": 75000,
+      "date": "2024-02-15",
+      "type": "payment",
+      "description": "Final payment for mobile app development"
+    }
+  ]
+} 
