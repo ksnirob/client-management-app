@@ -86,6 +86,19 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               <span>Finances</span>
             </Link>
           </li>
+          <li>
+            <Link
+              to="/reports"
+              className={`flex items-center space-x-3 p-3 rounded-lg transition-colors ${
+                isActivePath('/reports') 
+                  ? 'bg-primary-50 text-primary-600 font-medium' 
+                  : 'text-gray-600 hover:bg-gray-50'
+              }`}
+            >
+              <Briefcase size={20} />
+              <span>Reports</span>
+            </Link>
+          </li>
         </ul>
       </nav>
 

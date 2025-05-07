@@ -12,6 +12,7 @@ const Projects = () => {
   const [isViewMode, setIsViewMode] = useState(false);
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [fileInputs, setFileInputs] = useState<{ [projectId: string]: File | null }>({});
 
   const allProjects = clients.flatMap(client => 
     client.projects.map(project => ({
@@ -175,6 +176,34 @@ const Projects = () => {
     navigator.clipboard.writeText(text);
   };
 
+  const handleFileChange = (projectId: string, file: File | null) => {
+    setFileInputs(prev => ({ ...prev, [projectId]: file }));
+  };
+
+  const handleFileUpload = (projectId: string) => {
+    const file = fileInputs[projectId];
+    if (!file) return;
+    setClients(prev => prev.map(client => {
+      return {
+        ...client,
+        projects: client.projects.map(project => {
+          if (project.id === projectId) {
+            const newFile = {
+              name: file.name,
+              url: URL.createObjectURL(file)
+            };
+            return {
+              ...project,
+              files: [...(project.files || []), newFile]
+            };
+          }
+          return project;
+        })
+      };
+    }));
+    setFileInputs(prev => ({ ...prev, [projectId]: null }));
+  };
+
   const renderProjectDetails = () => {
     if (!selectedProject) return null;
 
@@ -225,7 +254,7 @@ const Projects = () => {
                     <div className="flex items-center space-x-2">
                       <span className="font-medium">{task.name}</span>
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        task.type === 'round' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
+                        task.type.startsWith('round') ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
                       }`}>
                         {task.type}
                       </span>
@@ -281,6 +310,31 @@ const Projects = () => {
           <div className="col-span-2">
             {renderDetailRow('Description', selectedProject.description)}
           </div>
+        </div>
+        {/* File upload and list */}
+        <div className="mt-6">
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Files</h3>
+          <div className="flex items-center gap-2 mb-2">
+            <input
+              type="file"
+              onChange={e => handleFileChange(selectedProject.id, e.target.files ? e.target.files[0] : null)}
+            />
+            <button
+              className="px-3 py-1 bg-primary-600 text-white rounded hover:bg-primary-700"
+              onClick={() => handleFileUpload(selectedProject.id)}
+              disabled={!fileInputs[selectedProject.id]}
+            >
+              Upload
+            </button>
+          </div>
+          <ul className="list-disc pl-6">
+            {(selectedProject.files || []).length === 0 && <li className="text-gray-500">No files uploaded</li>}
+            {(selectedProject.files || []).map((file: any, idx: number) => (
+              <li key={idx}>
+                <a href={file.url} download={file.name} className="text-blue-600 hover:underline">{file.name}</a>
+              </li>
+            ))}
+          </ul>
         </div>
         {renderTasks()}
       </div>
@@ -395,6 +449,14 @@ const Projects = () => {
       >
         <TaskForm
           initialData={selectedTask}
+          projects={clients.flatMap(client =>
+            client.projects.map(project => ({
+              id: project.id,
+              name: project.name,
+              clientId: client.id,
+              clientName: client.name
+            }))
+          )}
           onSubmit={handleTaskSubmit}
           onCancel={() => setIsTaskModalOpen(false)}
         />

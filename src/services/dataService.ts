@@ -2,18 +2,19 @@ import data from '../data/db.json';
 
 export type ProjectStatus = 'not-started' | 'in-progress' | 'completed';
 export type TransactionType = 'invoice' | 'payment';
-export type TaskType = 'round' | 'regular';
+export type TaskType = 'development' | 'design' | 'fixing' | 'feedback' | 'round-r1' | 'round-r2' | 'round-r3';
 
 export interface Task {
   id: string;
   name: string;
-  type: 'round' | 'square';
+  type: TaskType;
   status: 'not-started' | 'in-progress' | 'completed';
   description: string;
   dueDate: string;
   assignedTo?: string;
   projectId: string;
   clientId: string;
+  budget: number;
 }
 
 export interface Client {
@@ -39,6 +40,7 @@ export interface Project {
   clientId: string;
   clientName: string;
   tasks: Task[];
+  files?: { name: string; url: string }[];
 }
 
 interface Transaction {
@@ -209,7 +211,6 @@ class DataService {
 }
 
 export const dataService = DataService.getInstance();
-export type { Client, Project, Transaction, ProjectStatus, TransactionType };
 
 // Transform the data to match our interfaces
 const transformData = (rawData: any) => {

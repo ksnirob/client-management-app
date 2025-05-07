@@ -127,6 +127,7 @@ const Tasks = () => {
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Budget</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Due Date</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Assigned To</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
@@ -140,9 +141,14 @@ const Tasks = () => {
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{task.clientName}</td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    task.type === 'round' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
+                    task.type.startsWith('round') ? 'bg-indigo-100 text-indigo-800 border border-indigo-200' :
+                    task.type === 'development' ? 'bg-blue-100 text-blue-800' :
+                    task.type === 'design' ? 'bg-purple-100 text-purple-800' :
+                    task.type === 'fixing' ? 'bg-red-100 text-red-800' :
+                    task.type === 'feedback' ? 'bg-yellow-100 text-yellow-800' :
+                    'bg-gray-100 text-gray-800'
                   }`}>
-                    {task.type}
+                    {task.type.startsWith('round') ? task.type.replace('round-', 'Round ').toUpperCase() : task.type}
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
@@ -153,6 +159,9 @@ const Tasks = () => {
                   }`}>
                     {task.status}
                   </span>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  ${task.budget.toLocaleString()}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                   {new Date(task.dueDate).toLocaleDateString()}

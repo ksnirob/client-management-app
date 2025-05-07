@@ -8,6 +8,7 @@ import Tasks from './pages/Tasks';
 import Finances from './pages/Finances';
 import Login from './pages/Login';
 import ProtectedRoute from './components/ProtectedRoute';
+import Reports from './pages/Reports';
 
 function App() {
   return (
@@ -26,6 +27,7 @@ function App() {
                     <Route path="/projects" element={<Projects />} />
                     <Route path="/tasks" element={<Tasks />} />
                     <Route path="/finances" element={<Finances />} />
+                    <Route path="/reports" element={<Reports />} />
                   </Routes>
                 </Layout>
               </ProtectedRoute>

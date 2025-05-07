@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Task } from '../services/dataService';
+import { Task, TaskType } from '../services/dataService';
 
 interface TaskFormProps {
   initialData?: Task | null;
@@ -16,13 +16,13 @@ interface TaskFormProps {
 const TaskForm: React.FC<TaskFormProps> = ({ initialData, projects, onSubmit, onCancel }) => {
   const [formData, setFormData] = useState({
     name: initialData?.name || '',
-    type: initialData?.type || 'round',
+    type: initialData?.type || 'development',
     status: initialData?.status || 'not-started',
     description: initialData?.description || '',
     dueDate: initialData?.dueDate ? new Date(initialData.dueDate).toISOString().split('T')[0] : '',
-    assignedTo: initialData?.assignedTo || '',
     projectId: initialData?.projectId || '',
-    clientId: initialData?.clientId || ''
+    clientId: initialData?.clientId || '',
+    budget: initialData?.budget || 0
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -35,6 +35,14 @@ const TaskForm: React.FC<TaskFormProps> = ({ initialData, projects, onSubmit, on
     setFormData(prev => ({
       ...prev,
       [name]: value
+    }));
+  };
+
+  const handleTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const { value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      type: value as TaskType
     }));
   };
 
@@ -72,19 +80,38 @@ const TaskForm: React.FC<TaskFormProps> = ({ initialData, projects, onSubmit, on
         </select>
       </div>
 
-      <div>
-        <label htmlFor="type" className="block text-sm font-medium text-gray-700">Type</label>
-        <select
-          id="type"
-          name="type"
-          value={formData.type}
-          onChange={handleChange}
-          required
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
-        >
-          <option value="round">Round</option>
-          <option value="square">Square</option>
-        </select>
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label htmlFor="taskType" className="block text-sm font-medium text-gray-700">Task Type</label>
+          <select
+            id="taskType"
+            name="taskType"
+            value={formData.type.startsWith('round') ? 'development' : formData.type}
+            onChange={handleTypeChange}
+            required
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+          >
+            <option value="development">Development</option>
+            <option value="design">Design</option>
+            <option value="fixing">Fixing</option>
+            <option value="feedback">Feedback</option>
+          </select>
+        </div>
+
+        <div>
+          <label htmlFor="roundType" className="block text-sm font-medium text-gray-700">Round</label>
+          <select
+            id="roundType"
+            name="roundType"
+            value={formData.type.startsWith('round') ? formData.type : 'round-r1'}
+            onChange={handleTypeChange}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+          >
+            <option value="round-r1">Round 1</option>
+            <option value="round-r2">Round 2</option>
+            <option value="round-r3">Round 3</option>
+          </select>
+        </div>
       </div>
 
       <div>
@@ -129,13 +156,16 @@ const TaskForm: React.FC<TaskFormProps> = ({ initialData, projects, onSubmit, on
       </div>
 
       <div>
-        <label htmlFor="assignedTo" className="block text-sm font-medium text-gray-700">Assigned To</label>
+        <label htmlFor="budget" className="block text-sm font-medium text-gray-700">Budget ($)</label>
         <input
-          type="text"
-          id="assignedTo"
-          name="assignedTo"
-          value={formData.assignedTo}
+          type="number"
+          id="budget"
+          name="budget"
+          value={formData.budget}
           onChange={handleChange}
+          min="0"
+          step="0.01"
+          required
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
         />
       </div>

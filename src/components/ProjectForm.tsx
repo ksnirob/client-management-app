@@ -27,15 +27,22 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ initialData, clients, onSubmi
   });
 
   const [showPassword, setShowPassword] = useState(false);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      setSelectedFiles(Array.from(e.target.files));
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(formData);
+    onSubmit({ ...formData, files: selectedFiles });
   };
 
   const copyToClipboard = (text: string) => {
@@ -225,6 +232,27 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ initialData, clients, onSubmi
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
           required
         />
+      </div>
+
+      <div>
+        <label htmlFor="files" className="block text-sm font-medium text-gray-700">
+          Project Files
+        </label>
+        <input
+          type="file"
+          id="files"
+          name="files"
+          multiple
+          onChange={handleFileInputChange}
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+        />
+        {selectedFiles.length > 0 && (
+          <ul className="mt-2 list-disc pl-5 text-sm text-gray-600">
+            {selectedFiles.map((file, idx) => (
+              <li key={idx}>{file.name}</li>
+            ))}
+          </ul>
+        )}
       </div>
 
       <div className="flex justify-end space-x-3 pt-4">
