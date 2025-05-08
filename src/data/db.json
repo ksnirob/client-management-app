@@ -14,7 +14,42 @@
           "startDate": "2024-01-15",
           "endDate": "2024-06-30",
           "budget": 50000,
-          "description": "Complete redesign of the company website with modern UI/UX"
+          "description": "Complete redesign of the company website with modern UI/UX",
+          "tasks": [
+            {
+              "id": "t1",
+              "name": "Design Homepage",
+              "type": "design",
+              "status": "in-progress",
+              "description": "Create a modern homepage design.",
+              "dueDate": "2024-06-15",
+              "projectId": "p1",
+              "clientId": "1",
+              "budget": 1000
+            },
+            {
+              "id": "t2",
+              "name": "Develop Contact Form",
+              "type": "development",
+              "status": "not-started",
+              "description": "Implement the contact form backend.",
+              "dueDate": "2024-06-20",
+              "projectId": "p1",
+              "clientId": "1",
+              "budget": 500
+            },
+            {
+              "id": "t3",
+              "name": "Feedback Round 1",
+              "type": "feedback",
+              "status": "not-started",
+              "description": "Collect feedback from client on initial designs.",
+              "dueDate": "2024-06-22",
+              "projectId": "p1",
+              "clientId": "1",
+              "budget": 0
+            }
+          ]
         }
       ]
     },

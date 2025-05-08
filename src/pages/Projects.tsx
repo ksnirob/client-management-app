@@ -306,7 +306,11 @@ const Projects = () => {
           {renderDetailRow('Password', selectedProject.password, true)}
           {renderDetailRow('Start Date', new Date(selectedProject.startDate).toLocaleDateString())}
           {renderDetailRow('End Date', new Date(selectedProject.endDate).toLocaleDateString())}
-          {renderDetailRow('Budget', `$${selectedProject.budget.toLocaleString()}`)}
+          {renderDetailRow('Budget', (() => {
+            const taskBudget = (selectedProject.tasks || []).reduce((sum, t) => sum + (t.budget || 0), 0);
+            const totalBudget = selectedProject.budget + taskBudget;
+            return `Total: $${totalBudget.toLocaleString()} (Project: $${selectedProject.budget.toLocaleString()}, Tasks: $${taskBudget.toLocaleString()})`;
+          })())}
           <div className="col-span-2">
             {renderDetailRow('Description', selectedProject.description)}
           </div>
@@ -383,7 +387,11 @@ const Projects = () => {
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  ${project.budget.toLocaleString()}
+                  {(() => {
+                    const taskBudget = (project.tasks || []).reduce((sum, t) => sum + (t.budget || 0), 0);
+                    const totalBudget = project.budget + taskBudget;
+                    return `$${totalBudget.toLocaleString()}`;
+                  })()}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                   {new Date(project.startDate).toLocaleDateString()} - {new Date(project.endDate).toLocaleDateString()}

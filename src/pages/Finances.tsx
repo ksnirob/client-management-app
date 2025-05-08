@@ -9,11 +9,17 @@ const Finances = () => {
   const pendingInvoices = data.transactions
     .filter(t => t.type === 'invoice');
 
+  // Calculate total project and task budgets
+  const allProjects = data.clients.flatMap(client => client.projects || []);
+  const totalProjectBudget = allProjects.reduce((sum, p) => sum + (p.budget || 0), 0);
+  const totalTaskBudget = allProjects.reduce((sum, p) => sum + ((((p as any).tasks || []).reduce((tSum: number, t: any) => tSum + (t.budget || 0), 0)) || 0), 0);
+  const totalBudget = totalProjectBudget + totalTaskBudget;
+
   return (
     <div className="space-y-6">
       <h1 className="text-3xl font-bold text-gray-800">Finances</h1>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
           <h2 className="text-xl font-semibold mb-4 text-gray-700">Total Income</h2>
           <p className="text-3xl font-bold text-green-600">${totalIncome.toLocaleString()}</p>
@@ -22,6 +28,13 @@ const Finances = () => {
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
           <h2 className="text-xl font-semibold mb-4 text-gray-700">Pending Invoices</h2>
           <p className="text-3xl font-bold text-yellow-600">{pendingInvoices.length}</p>
+        </div>
+
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+          <h2 className="text-xl font-semibold mb-4 text-gray-700">Total Project Budgets</h2>
+          <p className="text-3xl font-bold text-blue-600">
+            ${totalBudget.toLocaleString()}
+          </p>
         </div>
       </div>
 

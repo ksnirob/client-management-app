@@ -98,7 +98,11 @@ const Reports = () => {
     } else if (activeTab === 'projects') {
       wsData = [
         ['ID', 'Name', 'Client', 'Status', 'End Date', 'Budget'],
-        ...filteredProjects.map((p: any) => [p.id, p.name, p.client, p.status, p.endDate, p.budget])
+        ...filteredProjects.map((p: any) => {
+          const taskBudget = (p.tasks || []).reduce((sum: number, t: any) => sum + (t.budget || 0), 0);
+          const totalBudget = (p.budget || 0) + taskBudget;
+          return [p.id, p.name, p.client, p.status, p.endDate, `Total: $${totalBudget.toLocaleString()} (Project: $${(p.budget || 0).toLocaleString()}, Tasks: $${taskBudget.toLocaleString()})`];
+        })
       ];
     } else if (activeTab === 'clients') {
       wsData = [
@@ -124,7 +128,11 @@ const Reports = () => {
     } else if (activeTab === 'projects') {
       wsData = [
         ['ID', 'Name', 'Client', 'Status', 'End Date', 'Budget'],
-        ...filteredProjects.map((p: any) => [p.id, p.name, p.client, p.status, p.endDate, p.budget])
+        ...filteredProjects.map((p: any) => {
+          const taskBudget = (p.tasks || []).reduce((sum: number, t: any) => sum + (t.budget || 0), 0);
+          const totalBudget = (p.budget || 0) + taskBudget;
+          return [p.id, p.name, p.client, p.status, p.endDate, `Total: $${totalBudget.toLocaleString()} (Project: $${(p.budget || 0).toLocaleString()}, Tasks: $${taskBudget.toLocaleString()})`];
+        })
       ];
     } else if (activeTab === 'clients') {
       wsData = [
@@ -263,16 +271,20 @@ const Reports = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredProjects.map((p: any) => (
-                  <tr key={p.id}>
-                    <td className="px-4 py-2">{p.id}</td>
-                    <td className="px-4 py-2">{p.name}</td>
-                    <td className="px-4 py-2">{p.client}</td>
-                    <td className="px-4 py-2">{p.status}</td>
-                    <td className="px-4 py-2">{p.endDate}</td>
-                    <td className="px-4 py-2">${p.budget.toLocaleString()}</td>
-                  </tr>
-                ))}
+                {filteredProjects.map((p: any) => {
+                  const taskBudget = (p.tasks || []).reduce((sum: number, t: any) => sum + (t.budget || 0), 0);
+                  const totalBudget = (p.budget || 0) + taskBudget;
+                  return (
+                    <tr key={p.id}>
+                      <td className="px-4 py-2">{p.id}</td>
+                      <td className="px-4 py-2">{p.name}</td>
+                      <td className="px-4 py-2">{p.client}</td>
+                      <td className="px-4 py-2">{p.status}</td>
+                      <td className="px-4 py-2">{p.endDate}</td>
+                      <td className="px-4 py-2">{`Total: $${totalBudget.toLocaleString()} (Project: $${(p.budget || 0).toLocaleString()}, Tasks: $${taskBudget.toLocaleString()})`}</td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
