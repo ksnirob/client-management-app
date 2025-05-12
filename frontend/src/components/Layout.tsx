@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Home, Users, Briefcase, DollarSign, CheckSquare } from 'lucide-react';
 
@@ -8,10 +8,18 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation();
+  const [tasks, setTasks] = useState([]);
 
   const isActivePath = (path: string) => {
     return location.pathname === path;
   };
+
+  useEffect(() => {
+    fetch('/api/tasks')
+      .then(res => res.json())
+      .then(data => setTasks(data))
+      .catch(err => console.error('Error fetching tasks:', err));
+  }, []);
 
   return (
     <div className="flex h-screen bg-gray-50">

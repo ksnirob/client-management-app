@@ -1,56 +1,67 @@
 import data from '../data/db.json';
 
-export type ProjectStatus = 'not-started' | 'in-progress' | 'completed';
+export type ProjectStatus = 'not_started' | 'in_progress' | 'completed';
 export type TransactionType = 'invoice' | 'payment';
 export type TaskType = 'development' | 'design' | 'fixing' | 'feedback' | 'round-r1' | 'round-r2' | 'round-r3';
+export type TaskStatus = 'pending' | 'in_progress' | 'completed' | 'cancelled';
+export type TaskPriority = 'low' | 'medium' | 'high';
 
 export interface Task {
-  id: string;
-  name: string;
-  type: TaskType;
-  status: 'not-started' | 'in-progress' | 'completed';
+  id: number;
+  title: string;
   description: string;
-  dueDate: string;
-  assignedTo?: string;
-  projectId: string;
-  clientId: string;
-  budget: number;
+  project_id: number | null;
+  client_id: number;
+  assigned_to?: number;
+  status: TaskStatus;
+  priority: TaskPriority;
+  due_date: string;
+  created_at: string;
+  updated_at: string;
+  client_name?: string;
+  assigned_to_name?: string;
+  project_title?: string;
 }
 
 export interface Client {
-  id: string;
-  name: string;
+  id: number;
+  company_name: string;
+  contact_person: string;
   email: string;
   phone: string;
-  address: string;
+  address: string | null;
+  status: string;
+  created_at: string;
+  updated_at: string;
   projects: Project[];
 }
 
 export interface Project {
-  id: string;
-  name: string;
-  status: ProjectStatus;
-  startDate: string;
-  endDate: string;
-  budget: number;
+  id: number;
+  title: string;
   description: string;
-  url: string;
-  username: string;
-  password: string;
-  clientId: string;
-  clientName: string;
-  tasks: Task[];
-  files?: { name: string; url: string }[];
+  client_id: number;
+  status: ProjectStatus;
+  start_date: string;
+  end_date: string;
+  budget: number;
+  created_at: string;
+  updated_at: string;
+  client_name?: string;
+  tasks?: Task[];
+  task_count?: number;
 }
 
 interface Transaction {
-  id: string;
-  clientId: string;
-  projectId: string;
+  id: number;
+  client_id: number;
+  project_id: number;
   amount: number;
   date: string;
   type: TransactionType;
   description: string;
+  created_at: string;
+  updated_at: string;
 }
 
 interface Database {
@@ -63,7 +74,6 @@ class DataService {
   private data: Database;
 
   private constructor() {
-    // Type assertion to ensure the imported data matches our Database interface
     this.data = data as unknown as Database;
   }
 
@@ -79,14 +89,14 @@ class DataService {
     return this.data.clients;
   }
 
-  public getClient(id: string): Client | undefined {
+  public getClient(id: number): Client | undefined {
     return this.data.clients.find(client => client.id === id);
   }
 
   public addClient(client: Omit<Client, 'id' | 'projects'>): Client {
     const newClient: Client = {
       ...client,
-      id: Date.now().toString(),
+      id: Date.now(),
       projects: []
     };
     this.data.clients.push(newClient);
@@ -94,7 +104,7 @@ class DataService {
     return newClient;
   }
 
-  public updateClient(id: string, clientData: Partial<Client>): Client | undefined {
+  public updateClient(id: number, clientData: Partial<Client>): Client | undefined {
     const index = this.data.clients.findIndex(client => client.id === id);
     if (index === -1) return undefined;
 
@@ -106,7 +116,7 @@ class DataService {
     return this.data.clients[index];
   }
 
-  public deleteClient(id: string): boolean {
+  public deleteClient(id: number): boolean {
     const initialLength = this.data.clients.length;
     this.data.clients = this.data.clients.filter(client => client.id !== id);
     this.saveData();
@@ -118,24 +128,24 @@ class DataService {
     return this.data.clients.flatMap(client => client.projects);
   }
 
-  public getProject(id: string): Project | undefined {
+  public getProject(id: number): Project | undefined {
     return this.getProjects().find(project => project.id === id);
   }
 
-  public addProject(clientId: string, project: Omit<Project, 'id'>): Project | undefined {
+  public addProject(clientId: number, project: Omit<Project, 'id'>): Project | undefined {
     const client = this.getClient(clientId);
     if (!client) return undefined;
 
     const newProject: Project = {
       ...project,
-      id: `p${Date.now()}`
+      id: Date.now()
     };
     client.projects.push(newProject);
     this.saveData();
     return newProject;
   }
 
-  public updateProject(id: string, projectData: Partial<Project>): Project | undefined {
+  public updateProject(id: number, projectData: Partial<Project>): Project | undefined {
     for (const client of this.data.clients) {
       const projectIndex = client.projects.findIndex(project => project.id === id);
       if (projectIndex !== -1) {
@@ -150,7 +160,7 @@ class DataService {
     return undefined;
   }
 
-  public deleteProject(id: string): boolean {
+  public deleteProject(id: number): boolean {
     let deleted = false;
     for (const client of this.data.clients) {
       const initialLength = client.projects.length;
@@ -170,21 +180,21 @@ class DataService {
     return this.data.transactions;
   }
 
-  public getTransaction(id: string): Transaction | undefined {
+  public getTransaction(id: number): Transaction | undefined {
     return this.data.transactions.find(transaction => transaction.id === id);
   }
 
   public addTransaction(transaction: Omit<Transaction, 'id'>): Transaction {
     const newTransaction: Transaction = {
       ...transaction,
-      id: `t${Date.now()}`
+      id: Date.now()
     };
     this.data.transactions.push(newTransaction);
     this.saveData();
     return newTransaction;
   }
 
-  public updateTransaction(id: string, transactionData: Partial<Transaction>): Transaction | undefined {
+  public updateTransaction(id: number, transactionData: Partial<Transaction>): Transaction | undefined {
     const index = this.data.transactions.findIndex(transaction => transaction.id === id);
     if (index === -1) return undefined;
 
@@ -196,7 +206,7 @@ class DataService {
     return this.data.transactions[index];
   }
 
-  public deleteTransaction(id: string): boolean {
+  public deleteTransaction(id: number): boolean {
     const initialLength = this.data.transactions.length;
     this.data.transactions = this.data.transactions.filter(transaction => transaction.id !== id);
     this.saveData();
@@ -204,8 +214,6 @@ class DataService {
   }
 
   private saveData(): void {
-    // In a real application, you would write to a file here
-    // For now, we'll just keep it in memory
     console.log('Data updated:', this.data);
   }
 }
@@ -223,8 +231,8 @@ const transformData = (rawData: any) => {
       url: project.url || '',
       username: project.username || '',
       password: project.password || '',
-      clientId: client.id,
-      clientName: client.name
+      client_id: client.id,
+      client_name: client.name
     }))
   }));
 };
