@@ -17,40 +17,46 @@ exports.getDashboardStats = async (req, res) => {
 
 exports.findAll = async (req, res) => {
   try {
-    console.log('Fetching all clients - Request received');
+    console.log('Finding all clients');
     const clients = await Client.findAll();
-    console.log('Found clients:', JSON.stringify(clients, null, 2));
-    if (!clients || clients.length === 0) {
-      console.log('No clients found in database');
-      return res.status(200).json([]);
-    }
-    res.status(200).json(clients);
-  } catch (error) {
-    console.error('Error fetching clients:', error);
-    console.error('Error stack:', error.stack);
+    console.log(`Found ${clients.length} clients`);
+
+    res.json({
+      message: 'Clients retrieved successfully',
+      data: clients
+    });
+  } catch (err) {
+    console.error('Error finding clients:', err);
     res.status(500).json({
-      message: 'Error retrieving clients',
-      error: error.message
+      message: 'Failed to retrieve clients',
+      error: err.message
     });
   }
 };
 
 exports.findOne = async (req, res) => {
   try {
-    console.log('Fetching client with id:', req.params.id);
+    console.log('Finding client by id:', req.params.id);
     const client = await Client.findById(req.params.id);
-    console.log('Found client:', JSON.stringify(client, null, 2));
+    
     if (!client) {
-      console.log('Client not found');
-      return res.status(404).json({ message: 'Client not found' });
+      console.log('Client not found:', req.params.id);
+      return res.status(404).json({
+        message: 'Client not found',
+        error: 'NOT_FOUND'
+      });
     }
-    res.status(200).json(client);
-  } catch (error) {
-    console.error('Error fetching client:', error);
-    console.error('Error stack:', error.stack);
+
+    console.log('Found client:', client);
+    res.json({
+      message: 'Client retrieved successfully',
+      data: client
+    });
+  } catch (err) {
+    console.error('Error finding client:', err);
     res.status(500).json({
-      message: 'Error retrieving client',
-      error: error.message
+      message: 'Failed to retrieve client',
+      error: err.message
     });
   }
 };
@@ -58,65 +64,120 @@ exports.findOne = async (req, res) => {
 exports.create = async (req, res) => {
   try {
     console.log('Creating client with data:', req.body);
-    const result = await Client.create(req.body);
-    console.log('Create result:', result);
+    
+    // Validate required fields
+    const requiredFields = ['company_name', 'contact_person', 'email', 'phone'];
+    const missingFields = requiredFields.filter(field => !req.body[field]);
+    
+    if (missingFields.length > 0) {
+      console.error('Missing required fields:', missingFields);
+      return res.status(400).json({
+        message: `Missing required fields: ${missingFields.join(', ')}`,
+        error: 'VALIDATION_ERROR'
+      });
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(req.body.email)) {
+      console.error('Invalid email format:', req.body.email);
+      return res.status(400).json({
+        message: 'Invalid email format',
+        error: 'VALIDATION_ERROR'
+      });
+    }
+
+    // Create client
+    const client = await Client.create(req.body);
+    console.log('Created client:', client);
+
     res.status(201).json({
       message: 'Client created successfully',
-      data: result
+      data: client
     });
-  } catch (error) {
-    console.error('Error creating client:', error);
-    console.error('Error stack:', error.stack);
+  } catch (err) {
+    console.error('Error creating client:', err);
     res.status(500).json({
-      message: 'Error creating client',
-      error: error.message
+      message: 'Failed to create client',
+      error: err.message
     });
   }
 };
 
 exports.update = async (req, res) => {
   try {
-    console.log('Updating client with id:', req.params.id);
-    console.log('Update data:', req.body);
-    const result = await Client.update(req.params.id, req.body);
-    console.log('Update result:', result);
-    if (result.affectedRows === 0) {
-      console.log('Client not found for update');
-      return res.status(404).json({ message: 'Client not found' });
+    console.log('Updating client:', { id: req.params.id, data: req.body });
+    
+    // Validate required fields
+    const requiredFields = ['company_name', 'email'];
+    const missingFields = requiredFields.filter(field => !req.body[field]);
+    
+    if (missingFields.length > 0) {
+      console.error('Missing required fields:', missingFields);
+      return res.status(400).json({
+        message: `Missing required fields: ${missingFields.join(', ')}`,
+        error: 'VALIDATION_ERROR'
+      });
     }
-    res.status(200).json({
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(req.body.email)) {
+      console.error('Invalid email format:', req.body.email);
+      return res.status(400).json({
+        message: 'Invalid email format',
+        error: 'VALIDATION_ERROR'
+      });
+    }
+
+    // Update client
+    const client = await Client.update(req.params.id, req.body);
+    
+    if (!client) {
+      console.log('Client not found:', req.params.id);
+      return res.status(404).json({
+        message: 'Client not found',
+        error: 'NOT_FOUND'
+      });
+    }
+
+    console.log('Updated client:', client);
+    res.json({
       message: 'Client updated successfully',
-      data: result
+      data: client
     });
-  } catch (error) {
-    console.error('Error updating client:', error);
-    console.error('Error stack:', error.stack);
+  } catch (err) {
+    console.error('Error updating client:', err);
     res.status(500).json({
-      message: 'Error updating client',
-      error: error.message
+      message: 'Failed to update client',
+      error: err.message
     });
   }
 };
 
 exports.delete = async (req, res) => {
   try {
-    console.log('Deleting client with id:', req.params.id);
+    console.log('Deleting client:', req.params.id);
     const result = await Client.delete(req.params.id);
-    console.log('Delete result:', result);
-    if (result.affectedRows === 0) {
-      console.log('Client not found for deletion');
-      return res.status(404).json({ message: 'Client not found' });
+    
+    if (!result) {
+      console.log('Client not found:', req.params.id);
+      return res.status(404).json({
+        message: 'Client not found',
+        error: 'NOT_FOUND'
+      });
     }
-    res.status(200).json({
+
+    console.log('Deleted client:', req.params.id);
+    res.json({
       message: 'Client deleted successfully',
       data: result
     });
-  } catch (error) {
-    console.error('Error deleting client:', error);
-    console.error('Error stack:', error.stack);
+  } catch (err) {
+    console.error('Error deleting client:', err);
     res.status(500).json({
-      message: 'Error deleting client',
-      error: error.message
+      message: 'Failed to delete client',
+      error: err.message
     });
   }
 }; 

@@ -16,6 +16,8 @@ CREATE TABLE IF NOT EXISTS clients (
     email VARCHAR(255) NOT NULL UNIQUE,
     phone VARCHAR(50),
     address TEXT,
+    country VARCHAR(100),
+    social_contacts JSON,
     status ENUM('active', 'inactive') DEFAULT 'active',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -30,6 +32,11 @@ CREATE TABLE IF NOT EXISTS projects (
     start_date DATE,
     end_date DATE,
     budget DECIMAL(10,2),
+    project_live_url VARCHAR(500),
+    project_files TEXT,
+    admin_login_url VARCHAR(500),
+    username_email VARCHAR(255),
+    password VARCHAR(255),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE SET NULL
@@ -43,6 +50,7 @@ CREATE TABLE IF NOT EXISTS tasks (
     project_id INT,
     assigned_to INT,
     status ENUM('pending', 'in_progress', 'completed', 'cancelled') DEFAULT 'pending',
+    type ENUM('development', 'design', 'fixing', 'feedback', 'round-r1', 'round-r2', 'round-r3') DEFAULT 'development',
     priority ENUM('low', 'medium', 'high') DEFAULT 'medium',
     due_date DATE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -53,10 +61,10 @@ CREATE TABLE IF NOT EXISTS tasks (
 );
 
 -- Insert test data for clients
-INSERT IGNORE INTO clients (company_name, contact_person, email, phone, address, status) VALUES
-('Test Company 1', 'John Doe', 'john@testcompany1.com', '123-456-7890', '123 Test St, Test City', 'active'),
-('Test Company 2', 'Jane Smith', 'jane@testcompany2.com', '098-765-4321', '456 Test Ave, Test Town', 'active'),
-('Test Company 3', 'Bob Wilson', 'bob@testcompany3.com', '555-555-5555', '789 Test Blvd, Test Village', 'inactive');
+INSERT IGNORE INTO clients (company_name, contact_person, email, phone, address, country, status) VALUES
+('Test Company 1', 'John Doe', 'john@testcompany1.com', '123-456-7890', '123 Test St, Test City', 'United States', 'active'),
+('Test Company 2', 'Jane Smith', 'jane@testcompany2.com', '098-765-4321', '456 Test Ave, Test Town', 'Canada', 'active'),
+('Test Company 3', 'Bob Wilson', 'bob@testcompany3.com', '555-555-5555', '789 Test Blvd, Test Village', 'United Kingdom', 'inactive');
 
 -- Insert test data for users
 INSERT IGNORE INTO users (name, email) VALUES

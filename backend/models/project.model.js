@@ -16,23 +16,34 @@ class Project {
       `);
       console.log('Basic project data:', projects);
 
-      // Then get task counts separately
-      const taskCountPromises = projects.map(async (project) => {
-        const [taskCount] = await db.execute(
-          'SELECT COUNT(*) as count FROM tasks WHERE project_id = ?',
+      // Then get task counts and status separately
+      const projectPromises = projects.map(async (project) => {
+        const [tasks] = await db.execute(
+          'SELECT id, status FROM tasks WHERE project_id = ?',
           [project.id]
         );
-        console.log(`Task count for project ${project.id}:`, taskCount[0].count);
+        
+        console.log(`Tasks for project ${project.id}:`, tasks);
+        
+        // Only auto-update status to in_progress if current status is not_started
+        // and there are active tasks
+        let projectStatus = project.status;
+        if (project.status === 'not_started' && tasks.length > 0 && 
+            tasks.some(task => task.status !== 'completed')) {
+          projectStatus = 'in_progress';
+        }
+        
         return {
           ...project,
-          task_count: Number(taskCount[0].count)
+          task_count: tasks.length,
+          status: projectStatus
         };
       });
 
-      const projectsWithCounts = await Promise.all(taskCountPromises);
-      console.log('Final projects with counts:', projectsWithCounts);
+      const projectsWithInfo = await Promise.all(projectPromises);
+      console.log('Final projects with counts and status:', projectsWithInfo);
       
-      return projectsWithCounts;
+      return projectsWithInfo;
     } catch (error) {
       console.error('Error in Project.findAll:', error);
       console.error('Error details:', {
@@ -48,33 +59,45 @@ class Project {
 
   static async findById(id) {
     try {
-      // Get project with task count in a single query
-      const [rows] = await db.execute(`
+      // Get project with client name
+      const [projects] = await db.execute(`
         SELECT 
           p.*,
-          c.company_name as client_name,
-          COALESCE((
-            SELECT COUNT(*) 
-            FROM tasks t 
-            WHERE t.project_id = p.id
-          ), 0) as task_count
+          c.company_name as client_name
         FROM projects p
         LEFT JOIN clients c ON p.client_id = c.id
         WHERE p.id = ?
       `, [id]);
-      
-      if (!rows[0]) {
+
+      if (!projects[0]) {
         throw new Error(`Project with id ${id} not found`);
       }
-      
-      // Convert task_count to number
-      const project = {
-        ...rows[0],
-        task_count: Number(rows[0].task_count)
+
+      // Get tasks for this project
+      const [tasks] = await db.execute(`
+        SELECT 
+          t.*,
+          u.name as assigned_to_name
+        FROM tasks t
+        LEFT JOIN users u ON t.assigned_to = u.id
+        WHERE t.project_id = ?
+        ORDER BY t.created_at DESC
+      `, [id]);
+
+      // Only auto-update status to in_progress if current status is not_started
+      // and there are active tasks
+      let projectStatus = projects[0].status;
+      if (projects[0].status === 'not_started' && tasks.length > 0 && 
+          tasks.some(task => task.status !== 'completed')) {
+        projectStatus = 'in_progress';
+      }
+
+      // Return project with tasks and updated status
+      return {
+        ...projects[0],
+        status: projectStatus,
+        tasks: tasks || []
       };
-      
-      console.log(`Project ${project.id} (${project.title}) has ${project.task_count} tasks`);
-      return project;
     } catch (error) {
       console.error('Error in Project.findById:', error);
       console.error('Error details:', {
@@ -117,7 +140,7 @@ class Project {
 
       // Create project
       const [result] = await db.execute(
-        'INSERT INTO projects (title, description, client_id, status, start_date, end_date, budget) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        'INSERT INTO projects (title, description, client_id, status, start_date, end_date, budget, project_live_url, project_files, admin_login_url, username_email, password) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
         [
           projectData.title,
           projectData.description || null,
@@ -125,7 +148,12 @@ class Project {
           projectData.status || 'not_started',
           formatDate(projectData.start_date),
           formatDate(projectData.end_date),
-          projectData.budget || null
+          projectData.budget || null,
+          projectData.project_live_url || null,
+          projectData.project_files || null,
+          projectData.admin_login_url || null,
+          projectData.username_email || null,
+          projectData.password || null
         ]
       );
       
@@ -163,27 +191,61 @@ class Project {
     try {
       console.log('Updating project with data:', projectData);
 
+      // Check if project exists and get current data
+      const [existingProject] = await db.execute(
+        'SELECT * FROM projects WHERE id = ?',
+          [id]
+        );
+        
+      if (!existingProject.length) {
+        throw new Error(`Project with id ${id} not found`);
+      }
+
+      // Validate status if provided
+      if (projectData.status) {
+        const validStatuses = ['not_started', 'pending', 'in_progress', 'completed', 'cancelled'];
+        if (!validStatuses.includes(projectData.status)) {
+          throw new Error(`Invalid status: ${projectData.status}`);
+        }
+      }
+
       // Format dates
       const formatDate = (dateStr) => {
         if (!dateStr) return null;
         return new Date(dateStr).toISOString().split('T')[0];
       };
 
-      const [result] = await db.execute(
-        'UPDATE projects SET title=?, description=?, client_id=?, status=?, start_date=?, end_date=?, budget=?, updated_at=NOW() WHERE id=?',
-        [
-          projectData.title,
-          projectData.description || null,
-          projectData.client_id,
-          projectData.status || 'not_started',
-          formatDate(projectData.start_date),
-          formatDate(projectData.end_date),
-          projectData.budget || null,
-          id
-        ]
-      );
+      // Create base query with updated_at timestamp
+      const query = `
+        UPDATE projects 
+        SET title = ?,
+            description = ?,
+            client_id = ?,
+            status = ?,
+            start_date = ?,
+            end_date = ?,
+            budget = ?,
+            updated_at = NOW()
+        WHERE id = ?
+      `;
       
-      // Fetch the updated project
+      const params = [
+        projectData.title || existingProject[0].title,
+        projectData.description || existingProject[0].description,
+        projectData.client_id || existingProject[0].client_id,
+        projectData.status || existingProject[0].status,
+        formatDate(projectData.start_date) || existingProject[0].start_date,
+        formatDate(projectData.end_date) || existingProject[0].end_date,
+        projectData.budget || existingProject[0].budget,
+        id
+      ];
+
+      console.log('Executing update query:', query.replace(/\s+/g, ' '));
+      console.log('With parameters:', params);
+      
+      const [result] = await db.execute(query, params);
+      
+      // Fetch the updated project with client name
       const [rows] = await db.execute(`
         SELECT 
           p.*,
@@ -193,6 +255,11 @@ class Project {
         WHERE p.id = ?
       `, [id]);
       
+      if (!rows[0]) {
+        throw new Error('Project was updated but could not be retrieved');
+      }
+
+      console.log('Updated project:', rows[0]);
       return rows[0];
     } catch (error) {
       console.error('Error in Project.update:', error);

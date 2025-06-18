@@ -9,6 +9,7 @@
     "install-all": "npm install && cd frontend && npm install && cd ../backend && npm install"
   },
   "dependencies": {
+    "@headlessui/react": "^2.2.4",
     "concurrently": "^8.2.0"
   }
-} 
+}

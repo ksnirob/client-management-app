@@ -11,18 +11,21 @@ interface TaskFormProps {
   }>;
   onSubmit: (data: any) => void;
   onCancel: () => void;
+  isViewMode?: boolean;
 }
 
-const TaskForm: React.FC<TaskFormProps> = ({ initialData, projects, onSubmit, onCancel }) => {
+const TaskForm: React.FC<TaskFormProps> = ({ initialData, projects, onSubmit, onCancel, isViewMode = false }) => {
   const [formData, setFormData] = useState({
     title: initialData?.title || '',
     description: initialData?.description || '',
-    status: initialData?.status || 'pending',
+    status: initialData?.status || 'not_started',
+    type: initialData?.type || 'development',
     priority: initialData?.priority || 'medium',
     due_date: initialData?.due_date ? new Date(initialData.due_date).toISOString().split('T')[0] : '',
     project_id: initialData?.project_id?.toString() || '',
     client_id: initialData?.client_id?.toString() || '',
-    assigned_to: initialData?.assigned_to || 0
+    assigned_to: initialData?.assigned_to || 0,
+    budget: initialData?.budget?.toString() || ''
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -60,8 +63,10 @@ const TaskForm: React.FC<TaskFormProps> = ({ initialData, projects, onSubmit, on
       client_id: Number(selectedProject.clientId),
       assigned_to: formData.assigned_to ? Number(formData.assigned_to) : null,
       status: formData.status,
+      type: formData.type,
       priority: formData.priority,
-      due_date: formData.due_date
+      due_date: formData.due_date,
+      budget: formData.budget ? Number(formData.budget) : null
     });
   };
 
@@ -105,7 +110,8 @@ const TaskForm: React.FC<TaskFormProps> = ({ initialData, projects, onSubmit, on
           value={formData.title}
           onChange={handleChange}
           required
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+          disabled={isViewMode}
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 disabled:bg-gray-50 disabled:text-gray-500"
         />
       </div>
 
@@ -117,7 +123,8 @@ const TaskForm: React.FC<TaskFormProps> = ({ initialData, projects, onSubmit, on
           value={formData.project_id}
           onChange={handleChange}
           required
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+          disabled={isViewMode}
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 disabled:bg-gray-50 disabled:text-gray-500"
         >
           <option value="">Select a project</option>
           {projects.map(project => (
@@ -128,7 +135,7 @@ const TaskForm: React.FC<TaskFormProps> = ({ initialData, projects, onSubmit, on
         </select>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-3 gap-4">
         <div>
           <label htmlFor="status" className="block text-sm font-medium text-gray-700">Status</label>
           <select
@@ -137,12 +144,35 @@ const TaskForm: React.FC<TaskFormProps> = ({ initialData, projects, onSubmit, on
             value={formData.status}
             onChange={handleChange}
             required
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+            disabled={isViewMode}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 disabled:bg-gray-50 disabled:text-gray-500"
           >
+            <option value="not_started">Not Started</option>
             <option value="pending">Pending</option>
             <option value="in_progress">In Progress</option>
             <option value="completed">Completed</option>
             <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+
+        <div>
+          <label htmlFor="type" className="block text-sm font-medium text-gray-700">Type</label>
+          <select
+            id="type"
+            name="type"
+            value={formData.type}
+            onChange={handleChange}
+            required
+            disabled={isViewMode}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 disabled:bg-gray-50 disabled:text-gray-500"
+          >
+            <option value="development">Development</option>
+            <option value="design">Design</option>
+            <option value="fixing">Fixing</option>
+            <option value="feedback">Feedback</option>
+            <option value="round-r1">Round R1</option>
+            <option value="round-r2">Round R2</option>
+            <option value="round-r3">Round R3</option>
           </select>
         </div>
 
@@ -154,7 +184,8 @@ const TaskForm: React.FC<TaskFormProps> = ({ initialData, projects, onSubmit, on
             value={formData.priority}
             onChange={handleChange}
             required
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+            disabled={isViewMode}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 disabled:bg-gray-50 disabled:text-gray-500"
           >
             <option value="low">Low</option>
             <option value="medium">Medium</option>
@@ -171,7 +202,8 @@ const TaskForm: React.FC<TaskFormProps> = ({ initialData, projects, onSubmit, on
           value={formData.description}
           onChange={handleChange}
           rows={3}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+          disabled={isViewMode}
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 disabled:bg-gray-50 disabled:text-gray-500"
         />
       </div>
 
@@ -184,7 +216,24 @@ const TaskForm: React.FC<TaskFormProps> = ({ initialData, projects, onSubmit, on
           value={formData.due_date}
           onChange={handleChange}
           required
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+          disabled={isViewMode}
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 disabled:bg-gray-50 disabled:text-gray-500"
+        />
+      </div>
+
+      <div>
+        <label htmlFor="budget" className="block text-sm font-medium text-gray-700">Budget ($)</label>
+        <input
+          type="number"
+          id="budget"
+          name="budget"
+          value={formData.budget}
+          onChange={handleChange}
+          min="0"
+          step="0.01"
+          placeholder="0.00"
+          disabled={isViewMode}
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 disabled:bg-gray-50 disabled:text-gray-500"
         />
       </div>
 
@@ -194,14 +243,16 @@ const TaskForm: React.FC<TaskFormProps> = ({ initialData, projects, onSubmit, on
           onClick={onCancel}
           className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
         >
-          Cancel
+          {isViewMode ? 'Close' : 'Cancel'}
         </button>
-        <button
-          type="submit"
-          className="px-4 py-2 text-sm font-medium text-white bg-primary-600 border border-transparent rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-        >
-          {initialData ? 'Update Task' : 'Create Task'}
-        </button>
+        {!isViewMode && (
+          <button
+            type="submit"
+            className="px-4 py-2 text-sm font-medium text-white bg-primary-600 border border-transparent rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+          >
+            {initialData ? 'Update Task' : 'Create Task'}
+          </button>
+        )}
       </div>
     </form>
   );
