@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Users, Briefcase, DollarSign, CheckSquare } from 'lucide-react';
+import { Home, Users, Briefcase, DollarSign, CheckSquare, Menu, X, BarChart } from 'lucide-react';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -8,6 +8,7 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [tasks, setTasks] = useState([]);
 
   const isActivePath = (path: string) => {
@@ -21,98 +22,80 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       .catch(err => console.error('Error fetching tasks:', err));
   }, []);
 
+  const navigationItems = [
+    { path: '/', icon: <Home size={20} />, label: 'Dashboard' },
+    { path: '/clients', icon: <Users size={20} />, label: 'Clients' },
+    { path: '/projects', icon: <Briefcase size={20} />, label: 'Projects' },
+    { path: '/tasks', icon: <CheckSquare size={20} />, label: 'Tasks' },
+    { path: '/finances', icon: <DollarSign size={20} />, label: 'Finances' },
+    { path: '/reports', icon: <BarChart size={20} />, label: 'Reports' },
+  ];
+
+  const NavLinks = () => (
+    <ul className="space-y-2">
+      {navigationItems.map((item) => (
+        <li key={item.path}>
+          <Link
+            to={item.path}
+            onClick={() => setIsMobileMenuOpen(false)}
+            className={`flex items-center space-x-3 p-3 rounded-lg transition-colors ${
+              isActivePath(item.path) 
+                ? 'bg-primary-50 text-primary-600 font-medium' 
+                : 'text-gray-600 hover:bg-gray-50'
+            }`}
+          >
+            {item.icon}
+            <span>{item.label}</span>
+          </Link>
+        </li>
+      ))}
+    </ul>
+  );
+
   return (
     <div className="flex h-screen bg-gray-50">
-      {/* Sidebar */}
-      <nav className="w-64 bg-white shadow-md">
+      {/* Mobile Menu Button */}
+      <button
+        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+        className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-lg bg-white shadow-md"
+      >
+        {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+      </button>
+
+      {/* Sidebar - Desktop */}
+      <nav className="hidden lg:block w-64 bg-white shadow-md">
         <div className="p-6 border-b border-gray-200">
           <h1 className="text-2xl font-bold text-gray-800">Client Manager</h1>
         </div>
-        <ul className="space-y-2 p-4">
-          <li>
-            <Link
-              to="/"
-              className={`flex items-center space-x-3 p-3 rounded-lg transition-colors ${
-                isActivePath('/') 
-                  ? 'bg-primary-50 text-primary-600 font-medium' 
-                  : 'text-gray-600 hover:bg-gray-50'
-              }`}
-            >
-              <Home size={20} />
-              <span>Dashboard</span>
-            </Link>
-          </li>
-          <li>
-            <Link
-              to="/clients"
-              className={`flex items-center space-x-3 p-3 rounded-lg transition-colors ${
-                isActivePath('/clients') 
-                  ? 'bg-primary-50 text-primary-600 font-medium' 
-                  : 'text-gray-600 hover:bg-gray-50'
-              }`}
-            >
-              <Users size={20} />
-              <span>Clients</span>
-            </Link>
-          </li>
-          <li>
-            <Link
-              to="/projects"
-              className={`flex items-center space-x-3 p-3 rounded-lg transition-colors ${
-                isActivePath('/projects') 
-                  ? 'bg-primary-50 text-primary-600 font-medium' 
-                  : 'text-gray-600 hover:bg-gray-50'
-              }`}
-            >
-              <Briefcase size={20} />
-              <span>Projects</span>
-            </Link>
-          </li>
-          <li>
-            <Link
-              to="/tasks"
-              className={`flex items-center space-x-3 p-3 rounded-lg transition-colors ${
-                isActivePath('/tasks') 
-                  ? 'bg-primary-50 text-primary-600 font-medium' 
-                  : 'text-gray-600 hover:bg-gray-50'
-              }`}
-            >
-              <CheckSquare size={20} />
-              <span>Tasks</span>
-            </Link>
-          </li>
-          <li>
-            <Link
-              to="/finances"
-              className={`flex items-center space-x-3 p-3 rounded-lg transition-colors ${
-                isActivePath('/finances') 
-                  ? 'bg-primary-50 text-primary-600 font-medium' 
-                  : 'text-gray-600 hover:bg-gray-50'
-              }`}
-            >
-              <DollarSign size={20} />
-              <span>Finances</span>
-            </Link>
-          </li>
-          <li>
-            <Link
-              to="/reports"
-              className={`flex items-center space-x-3 p-3 rounded-lg transition-colors ${
-                isActivePath('/reports') 
-                  ? 'bg-primary-50 text-primary-600 font-medium' 
-                  : 'text-gray-600 hover:bg-gray-50'
-              }`}
-            >
-              <Briefcase size={20} />
-              <span>Reports</span>
-            </Link>
-          </li>
-        </ul>
+        <div className="p-4">
+          <NavLinks />
+        </div>
       </nav>
 
+      {/* Sidebar - Mobile */}
+      {isMobileMenuOpen && (
+        <div className="lg:hidden fixed inset-0 z-40">
+          {/* Backdrop */}
+          <div 
+            className="fixed inset-0 bg-black bg-opacity-50"
+            onClick={() => setIsMobileMenuOpen(false)}
+          />
+          
+          {/* Mobile Menu */}
+          <nav className="fixed inset-y-0 left-0 w-64 bg-white shadow-md transform transition-transform duration-200 ease-in-out">
+            <div className="p-6 border-b border-gray-200">
+              <h1 className="text-2xl font-bold text-gray-800">Client Manager</h1>
+            </div>
+            <div className="p-4">
+              <NavLinks />
+            </div>
+          </nav>
+        </div>
+      )}
+
       {/* Main Content */}
-      <main className="flex-1 overflow-auto p-8">
-        <div className="max-w-7xl mx-auto">
+      <main className="flex-1 overflow-auto">
+        <div className="max-w-7xl mx-auto p-4 lg:p-8 pt-16 lg:pt-8">
           {children}
         </div>
       </main>

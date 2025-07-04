@@ -1,26 +1,28 @@
 import data from '../data/db.json';
 
-export type ProjectStatus = 'not_started' | 'in_progress' | 'completed';
+export type ProjectStatus = 'not_started' | 'pending' | 'in_progress' | 'completed' | 'cancelled';
 export type TransactionType = 'invoice' | 'payment';
 export type TaskType = 'development' | 'design' | 'fixing' | 'feedback' | 'round-r1' | 'round-r2' | 'round-r3';
-export type TaskStatus = 'pending' | 'in_progress' | 'completed' | 'cancelled';
+export type TaskStatus = 'not_started' | 'pending' | 'in_progress' | 'completed' | 'cancelled';
 export type TaskPriority = 'low' | 'medium' | 'high';
 
 export interface Task {
   id: number;
   title: string;
-  description: string;
-  project_id: number | null;
+  description?: string;
+  project_id: number;
+  project_title?: string;
   client_id: number;
+  client_name?: string;
   assigned_to?: number;
+  assigned_to_name?: string;
   status: TaskStatus;
+  type: TaskType;
   priority: TaskPriority;
   due_date: string;
-  created_at: string;
-  updated_at: string;
-  client_name?: string;
-  assigned_to_name?: string;
-  project_title?: string;
+  budget?: number;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface Client {
@@ -30,6 +32,11 @@ export interface Client {
   email: string;
   phone: string;
   address: string | null;
+  country: string | null;
+  social_contacts?: {
+    whatsapp?: string;
+    linkedin?: string;
+  };
   status: string;
   created_at: string;
   updated_at: string;
@@ -42,14 +49,26 @@ export interface Project {
   description: string;
   client_id: number;
   status: ProjectStatus;
-  start_date: string;
-  end_date: string;
+  priority: TaskPriority;
+  start_date: string | null;
+  end_date: string | null;
+  due_date: string;
   budget: number;
+  assigned_to: number | null;
   created_at: string;
   updated_at: string;
   client_name?: string;
   tasks?: Task[];
   task_count?: number;
+  project_live_url?: string;
+  project_files?: string;
+  admin_login_url?: string;
+  username_email?: string;
+  password?: string;
+  // Budget calculation fields
+  static_budget?: number;
+  total_payments?: number;
+  total_expenses?: number;
 }
 
 interface Transaction {

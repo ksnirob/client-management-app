@@ -50,6 +50,26 @@
               "budget": 0
             }
           ]
+        },
+        {
+          "id": "p3",
+          "name": "Marketing Campaign",
+          "status": "pending",
+          "startDate": "2024-03-01",
+          "endDate": "2024-08-31",
+          "budget": 30000,
+          "description": "Digital marketing campaign for Q2-Q3",
+          "tasks": []
+        },
+        {
+          "id": "p4",
+          "name": "Mobile App Integration",
+          "status": "cancelled",
+          "startDate": "2024-02-01",
+          "endDate": "2024-04-30",
+          "budget": 25000,
+          "description": "Integration of website with mobile app - cancelled due to budget constraints",
+          "tasks": []
         }
       ]
     },
@@ -68,6 +88,16 @@
           "endDate": "2024-02-15",
           "budget": 75000,
           "description": "Development of a cross-platform mobile application"
+        },
+        {
+          "id": "p5",
+          "name": "Cloud Migration",
+          "status": "pending",
+          "startDate": "2024-04-01",
+          "endDate": "2024-07-31",
+          "budget": 45000,
+          "description": "Migration of legacy systems to cloud infrastructure",
+          "tasks": []
         }
       ]
     }

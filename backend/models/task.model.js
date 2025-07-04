@@ -1,5 +1,9 @@
 const db = require('../config/db.config');
 
+// Valid task types and priorities
+const VALID_TYPES = ['development', 'design', 'fixing', 'feedback', 'round-r1', 'round-r2', 'round-r3'];
+const VALID_PRIORITIES = ['low', 'medium', 'high'];
+
 class Task {
   static async findAll() {
     try {
@@ -108,8 +112,8 @@ class Task {
       const query = `
         INSERT INTO tasks (
           title, description, project_id, client_id, assigned_to, 
-          status, priority, due_date, created_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+          status, type, priority, due_date, budget, created_at, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
       `;
       
       const params = [
@@ -119,8 +123,10 @@ class Task {
         taskData.client_id,
         taskData.assigned_to || null,
         taskData.status,
+        taskData.type || 'development',
         taskData.priority,
-        taskData.due_date
+        taskData.due_date,
+        taskData.budget || null
       ];
       
       console.log('Executing query:', query.replace(/\s+/g, ' '));
@@ -167,66 +173,146 @@ class Task {
   }
 
   static async update(id, taskData) {
+    let connection;
     try {
-      console.log('Updating task with data:', taskData);
-      
-      // Create base query with updated_at timestamp
-      const query = `
-        UPDATE tasks 
-        SET title=?, description=?, project_id=?, client_id=?, assigned_to=?, 
-            status=?, priority=?, due_date=?, updated_at=NOW() 
-        WHERE id=?
-      `;
-      
-      const params = [
-        taskData.title,
-        taskData.description || null,
-        taskData.project_id,
-        taskData.client_id,
-        taskData.assigned_to || null,
-        taskData.status,
-        taskData.priority,
-        taskData.due_date,
-        id
-      ];
-      
-      console.log('Executing update query:', query.replace(/\s+/g, ' '));
-      console.log('With parameters:', params);
-      
-      const [result] = await db.execute(query, params);
-      
-      // Fetch the updated task
-      const [rows] = await db.execute(`
-        SELECT 
-          t.*,
-          c.company_name as client_name,
-          u.name as assigned_to_name,
-          CASE 
-            WHEN p.id IS NOT NULL THEN p.title 
-            ELSE 'No Project' 
-          END as project_title
-        FROM tasks t
-        LEFT JOIN clients c ON t.client_id = c.id
-        LEFT JOIN users u ON t.assigned_to = u.id
-        LEFT JOIN projects p ON t.project_id = p.id
-        WHERE t.id = ?
-      `, [id]);
-      
-      if (!rows[0]) {
-        throw new Error('Task was updated but could not be retrieved');
+      console.log('Task update called with:', { id, taskData });
+
+      // Validate type if provided
+      if (taskData.type !== undefined) {
+        console.log('Type update requested:', {
+          newType: taskData.type,
+          isValid: VALID_TYPES.includes(taskData.type)
+        });
+        
+        if (!VALID_TYPES.includes(taskData.type)) {
+          throw new Error(`Invalid type: ${taskData.type}. Must be one of: ${VALID_TYPES.join(', ')}`);
+        }
       }
+
+      // Get a connection from the pool
+      connection = await db.getConnection();
       
-      return rows[0];
+      try {
+        // Start transaction
+        await connection.beginTransaction();
+
+        // Get current task data
+        const [currentTask] = await connection.execute(
+          'SELECT * FROM tasks WHERE id = ? FOR UPDATE',
+          [id]
+        );
+
+        if (!currentTask.length) {
+          throw new Error(`Task with id ${id} not found`);
+        }
+
+        console.log('Current task data:', currentTask[0]);
+
+        // Prepare update data
+        const updateData = {
+          ...currentTask[0],
+          ...taskData
+        };
+
+        console.log('Prepared update data:', updateData);
+
+        // Execute update with explicit type handling
+        const query = `
+          UPDATE tasks 
+          SET 
+            title = ?,
+            description = ?,
+            project_id = ?,
+            client_id = ?,
+            assigned_to = ?,
+            status = ?,
+            type = ?,
+            priority = ?,
+            due_date = ?,
+            budget = ?,
+            updated_at = NOW()
+          WHERE id = ?
+        `;
+
+        const values = [
+          updateData.title,
+          updateData.description,
+          updateData.project_id,
+          updateData.client_id,
+          updateData.assigned_to,
+          updateData.status,
+          updateData.type, // This should now be explicitly validated
+          updateData.priority,
+          updateData.due_date,
+          updateData.budget,
+          id
+        ];
+
+        console.log('Update query values:', values);
+
+        const [updateResult] = await connection.execute(query, values);
+        console.log('Update result:', updateResult);
+
+        if (updateResult.affectedRows !== 1) {
+          throw new Error('Failed to update task');
+        }
+
+        // Verify the update immediately
+        const [verifyUpdate] = await connection.execute(
+          'SELECT type FROM tasks WHERE id = ? FOR UPDATE',
+          [id]
+        );
+
+        console.log('Verification after update:', {
+          requestedType: taskData.type,
+          actualType: verifyUpdate[0]?.type
+        });
+
+        if (taskData.type && verifyUpdate[0]?.type !== taskData.type) {
+          throw new Error(`Type update verification failed. Expected: ${taskData.type}, Got: ${verifyUpdate[0]?.type}`);
+        }
+
+        // Get the updated task with all joins
+        const [updatedTask] = await connection.execute(`
+          SELECT 
+            t.*,
+            c.company_name as client_name,
+            u.name as assigned_to_name,
+            CASE 
+              WHEN p.id IS NOT NULL THEN p.title 
+              ELSE 'No Project' 
+            END as project_title
+          FROM tasks t
+          LEFT JOIN clients c ON t.client_id = c.id
+          LEFT JOIN users u ON t.assigned_to = u.id
+          LEFT JOIN projects p ON t.project_id = p.id
+          WHERE t.id = ?
+        `, [id]);
+
+        if (!updatedTask[0]) {
+          throw new Error('Task was updated but could not be retrieved');
+        }
+
+        // Commit the transaction
+        await connection.commit();
+        console.log('Final updated task:', updatedTask[0]);
+        return updatedTask[0];
+
+      } catch (error) {
+        // Rollback on error
+        if (connection) {
+          await connection.rollback();
+          console.error('Transaction rolled back due to error:', error);
+        }
+        throw error;
+      }
     } catch (error) {
       console.error('Error in Task.update:', error);
-      console.error('Error details:', {
-        code: error.code,
-        errno: error.errno,
-        sqlMessage: error.sqlMessage,
-        sqlState: error.sqlState
-      });
-      console.error('Task data that caused error:', taskData);
       throw error;
+    } finally {
+      if (connection) {
+        connection.release();
+      }
     }
   }
 

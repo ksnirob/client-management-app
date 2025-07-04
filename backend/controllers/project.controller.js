@@ -15,6 +15,24 @@ exports.findAll = async (req, res) => {
   }
 };
 
+exports.findById = async (req, res) => {
+  try {
+    console.log('Project controller: Fetching project with id:', req.params.id);
+    const project = await Project.findById(req.params.id);
+    if (!project) {
+      return res.status(404).json({ message: 'Project not found' });
+    }
+    console.log('Project controller: Found project:', project);
+    res.json(project);
+  } catch (err) {
+    console.error('Project controller: Error fetching project:', err);
+    res.status(500).json({ 
+      message: 'Error fetching project', 
+      error: err.message 
+    });
+  }
+};
+
 exports.create = async (req, res) => {
   try {
     console.log('Project controller: Creating project with data:', JSON.stringify(req.body, null, 2));
