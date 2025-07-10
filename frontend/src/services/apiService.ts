@@ -242,31 +242,28 @@ class ApiService {
     try {
       console.log('Updating project with data:', { id, project });
       
-      // Format the update data to include all project fields
-      const updateData = {
-        title: project.title,
-        description: project.description !== undefined ? project.description : '',
-        status: project.status,
-        client_id: project.client_id ? Number(project.client_id) : null,
-        start_date: project.start_date || null,
-        end_date: project.end_date || null,
-        budget: project.budget !== undefined ? Number(project.budget) : null,
-        project_live_url: project.project_live_url || null,
-        project_files: project.project_files || null,
-        admin_login_url: project.admin_login_url || null,
-        username_email: project.username_email || null,
-        password: project.password || null,
-        assigned_to: project.assigned_to || null,
-        priority: project.priority || 'medium'
-      };
+      // Only include fields that are actually being updated
+      const updateData: Record<string, any> = {};
+      
+      if (project.title !== undefined) updateData.title = project.title;
+      if (project.description !== undefined) updateData.description = project.description;
+      if (project.status !== undefined) updateData.status = project.status;
+      if (project.client_id !== undefined) updateData.client_id = Number(project.client_id);
+      if (project.start_date !== undefined) updateData.start_date = project.start_date;
+      if (project.end_date !== undefined) updateData.end_date = project.end_date;
+      if (project.budget !== undefined) updateData.budget = Number(project.budget);
+      if (project.project_live_url !== undefined) updateData.project_live_url = project.project_live_url;
+      if (project.project_files !== undefined) updateData.project_files = project.project_files;
+      if (project.admin_login_url !== undefined) updateData.admin_login_url = project.admin_login_url;
+      if (project.username_email !== undefined) updateData.username_email = project.username_email;
+      if (project.password !== undefined) updateData.password = project.password;
+      if (project.hosting_login_url !== undefined) updateData.hosting_login_url = project.hosting_login_url;
+      if (project.hosting_username_email !== undefined) updateData.hosting_username_email = project.hosting_username_email;
+      if (project.hosting_password !== undefined) updateData.hosting_password = project.hosting_password;
+      if (project.assigned_to !== undefined) updateData.assigned_to = project.assigned_to;
+      if (project.priority !== undefined) updateData.priority = project.priority;
 
-      // Remove undefined values to avoid sending them
-      const cleanedData = Object.entries(updateData).reduce((acc, [key, value]) => {
-        if (value !== undefined) {
-          acc[key] = value;
-        }
-        return acc;
-      }, {} as Record<string, any>);
+      const cleanedData = updateData;
 
       const url = `${API_BASE_URL}/projects/${id}`;
       console.log('Sending update request:', {

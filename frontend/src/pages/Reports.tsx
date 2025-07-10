@@ -882,11 +882,17 @@ const Reports: React.FC = () => {
 
   // Loading state
   if (loading) {
-  return (
-      <div className="flex items-center justify-center h-screen">
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-purple-50 to-indigo-100 flex items-center justify-center">
         <div className="text-center">
-          <FaSpinner className="animate-spin text-4xl text-primary-600 mx-auto mb-4" />
-          <div className="text-xl text-gray-600">Loading reports...</div>
+          <div className="relative">
+            <div className="w-20 h-20 border-4 border-purple-200 rounded-full animate-spin border-t-purple-600 mx-auto mb-6"></div>
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+              <div className="w-8 h-8 bg-purple-600 rounded-full animate-pulse"></div>
+            </div>
+          </div>
+          <div className="text-xl font-semibold text-gray-700 mb-2">Loading Analytics</div>
+          <div className="text-sm text-gray-500">Generating your business insights...</div>
         </div>
       </div>
     );
@@ -895,16 +901,20 @@ const Reports: React.FC = () => {
   // Error state
   if (error) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-center">
-          <FaExclamationTriangle className="text-4xl text-red-600 mx-auto mb-4" />
-          <div className="text-xl text-red-600 mb-4">{error}</div>
-        <button
-            onClick={handleRefresh}
-            className="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 flex items-center gap-2 mx-auto"
-        >
-            <FaRefresh /> Try Again
-        </button>
+      <div className="min-h-screen bg-gradient-to-br from-red-50 via-pink-50 to-rose-100 flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto p-8">
+          <div className="bg-white rounded-2xl shadow-xl p-8">
+            <FaExclamationTriangle className="text-5xl text-red-500 mx-auto mb-6" />
+            <div className="text-xl font-semibold text-gray-800 mb-4">Reports Error</div>
+            <div className="text-gray-600 mb-6">{error}</div>
+            <button
+              onClick={handleRefresh}
+              className="px-6 py-3 bg-gradient-to-r from-red-500 to-pink-600 text-white rounded-xl hover:from-red-600 hover:to-pink-700 transition-all duration-200 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2 mx-auto"
+            >
+              <FaRefresh className="w-4 h-4" />
+              Try Again
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -912,185 +922,200 @@ const Reports: React.FC = () => {
 
   if (!reportData || !filteredData || !metrics || !chartData) {
     return (
-      <div className="flex items-center justify-center h-screen">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-purple-50 to-indigo-100 flex items-center justify-center">
         <div className="text-center">
-          <FaSpinner className="animate-spin text-4xl text-primary-600 mx-auto mb-4" />
-          <div className="text-xl text-gray-600">Processing data...</div>
+          <div className="relative">
+            <div className="w-16 h-16 border-4 border-indigo-200 rounded-full animate-spin border-t-indigo-600 mx-auto mb-4"></div>
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+              <div className="w-6 h-6 bg-indigo-600 rounded-full animate-pulse"></div>
+            </div>
+          </div>
+          <div className="text-xl font-semibold text-gray-700">Processing Analytics</div>
+          <div className="text-sm text-gray-500 mt-1">Crunching the numbers...</div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 p-6 bg-gray-50 min-h-screen">
-      {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Analytics & Reports</h1>
-          <p className="text-gray-600 mt-1">
-            Comprehensive insights into your business performance
-          </p>
-        </div>
-        
-        <div className="flex flex-wrap gap-3">
-        <button
-            onClick={handleRefresh}
-            disabled={refreshing}
-            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-colors"
-        >
-            <FaRefresh className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
-            Refresh
-        </button>
-          
-          {/* Export Dropdown */}
-          <div className="relative export-dropdown">
-        <button
-              onClick={() => setIsExportOpen(!isExportOpen)}
-              className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
-        >
-              <FaDownload className="w-4 h-4" />
-              Export
-              <FaChevronDown className={`w-3 h-3 transition-transform ${isExportOpen ? 'rotate-180' : ''}`} />
-        </button>
-
-            {isExportOpen && (
-              <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
-        <button
-                  onClick={() => {
-                    handleExportPNG();
-                    setIsExportOpen(false);
-                  }}
-                  className="flex items-center gap-3 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-        >
-                  <FaFileImage className="w-4 h-4 text-blue-600" />
-                  Export as PNG
-        </button>
-        <button
-                  onClick={() => {
-                    handleExportPDF();
-                    setIsExportOpen(false);
-                  }}
-                  className="flex items-center gap-3 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-        >
-                  <FaFilePdf className="w-4 h-4 text-red-600" />
-                  Export as PDF
-        </button>
-        <button
-                  onClick={() => {
-                    handleExportExcel();
-                    setIsExportOpen(false);
-                  }}
-                  className="flex items-center gap-3 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                >
-                  <FaFileExcel className="w-4 h-4 text-green-600" />
-                  Export as Excel
-                </button>
-                <button
-                  onClick={() => {
-                    handleExportCSV();
-                    setIsExportOpen(false);
-                  }}
-                  className="flex items-center gap-3 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-            >
-                  <FaFileCsv className="w-4 h-4 text-yellow-600" />
-                  Export as CSV
-            </button>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Navigation Tabs */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-1">
-        <nav className="flex gap-1">
-          {[
-            { id: 'overview', label: 'Overview', icon: FaChartLine },
-            { id: 'revenue', label: 'Revenue', icon: FaDollarSign },
-            { id: 'projects', label: 'Projects', icon: FaProjectDiagram },
-            { id: 'clients', label: 'Clients', icon: FaUsers },
-            { id: 'performance', label: 'Performance', icon: FaChartBar }
-          ].map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as ReportTab)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-md font-medium transition-colors ${
-                activeTab === tab.id 
-                  ? 'bg-primary-600 text-white shadow-sm' 
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-              }`}
-            >
-              <tab.icon className="w-4 h-4" />
-              {tab.label}
-        </button>
-          ))}
-      </nav>
-      </div>
-
-      {/* Time Filter Controls */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-        <div className="flex flex-wrap items-center gap-4">
-          <div className="flex items-center gap-2">
-            <FaCalendar className="text-gray-500" />
-            <span className="text-sm font-medium text-gray-700">Time Period:</span>
-          </div>
-          
-          <div className="flex flex-wrap gap-2">
-            {[
-              { id: 'weekly', label: 'Last 7 Days' },
-              { id: 'monthly', label: 'Last 30 Days' },
-              { id: 'quarterly', label: 'Last 3 Months' },
-              { id: 'yearly', label: 'Last Year' }
-            ].map(filter => (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-purple-50 to-indigo-100">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="space-y-8">
+          {/* Header */}
+          <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4">
+            <div className="space-y-2">
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 via-purple-800 to-indigo-800 bg-clip-text text-transparent">
+                Analytics & Reports
+              </h1>
+              <p className="text-lg text-gray-600">
+                Comprehensive insights into your business performance
+              </p>
+            </div>
+            
+            <div className="flex flex-wrap gap-3">
               <button
-                key={filter.id}
-                onClick={() => {
-                  setTimeFilter(filter.id as TimeFilter);
-                  setCustomDateRange({ start: '', end: '' });
-                }}
-                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                  timeFilter === filter.id 
-                    ? 'bg-primary-600 text-white' 
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
+                onClick={handleRefresh}
+                disabled={refreshing}
+                className="flex items-center gap-2 px-4 py-2.5 bg-white text-gray-700 rounded-xl border border-gray-200 hover:bg-gray-50 hover:border-gray-300 disabled:opacity-50 transition-all duration-200 font-medium shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
               >
-                {filter.label}
+                <FaRefresh className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+                Refresh
               </button>
-            ))}
+              
+              {/* Export Dropdown */}
+              <div className="relative export-dropdown">
+                <button
+                  onClick={() => setIsExportOpen(!isExportOpen)}
+                  className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl hover:from-purple-700 hover:to-indigo-700 transition-all duration-200 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                >
+                  <FaDownload className="w-4 h-4" />
+                  Export
+                  <FaChevronDown className={`w-3 h-3 transition-transform ${isExportOpen ? 'rotate-180' : ''}`} />
+                </button>
+
+                {isExportOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-2xl border border-gray-100 py-2 z-50">
+                    <button
+                      onClick={() => {
+                        handleExportPNG();
+                        setIsExportOpen(false);
+                      }}
+                      className="flex items-center gap-3 w-full px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-all duration-200"
+                    >
+                      <FaFileImage className="w-4 h-4 text-blue-600" />
+                      Export as PNG
+                    </button>
+                    <button
+                      onClick={() => {
+                        handleExportPDF();
+                        setIsExportOpen(false);
+                      }}
+                      className="flex items-center gap-3 w-full px-4 py-3 text-sm text-gray-700 hover:bg-red-50 hover:text-red-700 transition-all duration-200"
+                    >
+                      <FaFilePdf className="w-4 h-4 text-red-600" />
+                      Export as PDF
+                    </button>
+                    <button
+                      onClick={() => {
+                        handleExportExcel();
+                        setIsExportOpen(false);
+                      }}
+                      className="flex items-center gap-3 w-full px-4 py-3 text-sm text-gray-700 hover:bg-green-50 hover:text-green-700 transition-all duration-200"
+                    >
+                      <FaFileExcel className="w-4 h-4 text-green-600" />
+                      Export as Excel
+                    </button>
+                    <button
+                      onClick={() => {
+                        handleExportCSV();
+                        setIsExportOpen(false);
+                      }}
+                      className="flex items-center gap-3 w-full px-4 py-3 text-sm text-gray-700 hover:bg-yellow-50 hover:text-yellow-700 transition-all duration-200"
+                    >
+                      <FaFileCsv className="w-4 h-4 text-yellow-600" />
+                      Export as CSV
+                    </button>
+                  </div>
+                )}
+          </div>
+        </div>
+      </div>
+
+          {/* Navigation Tabs */}
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-2 hover:shadow-xl transition-all duration-300">
+            <nav className="flex flex-wrap gap-2">
+              {[
+                { id: 'overview', label: 'Overview', icon: FaChartLine },
+                { id: 'revenue', label: 'Revenue', icon: FaDollarSign },
+                { id: 'projects', label: 'Projects', icon: FaProjectDiagram },
+                { id: 'clients', label: 'Clients', icon: FaUsers },
+                { id: 'performance', label: 'Performance', icon: FaChartBar }
+              ].map(tab => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id as ReportTab)}
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-all duration-200 transform hover:-translate-y-0.5 ${
+                    activeTab === tab.id 
+                      ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg' 
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-purple-50'
+                  }`}
+                >
+                  <tab.icon className="w-4 h-4" />
+                  {tab.label}
+                </button>
+              ))}
+            </nav>
           </div>
 
-          <div className="flex items-center gap-2 ml-auto">
-            <span className="text-sm text-gray-600">Custom:</span>
-          <input
-            type="date"
-              value={customDateRange.start}
-              onChange={(e) => {
-                setCustomDateRange(prev => ({ ...prev, start: e.target.value }));
-                if (e.target.value && customDateRange.end) {
-                  setTimeFilter('custom');
-                }
-              }}
-              className="px-3 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-            />
-            <span className="text-sm text-gray-600">to</span>
-          <input
-            type="date"
-              value={customDateRange.end}
-              onChange={(e) => {
-                setCustomDateRange(prev => ({ ...prev, end: e.target.value }));
-                if (customDateRange.start && e.target.value) {
-                  setTimeFilter('custom');
-                }
-              }}
-              className="px-3 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-          />
-        </div>
-        </div>
-        
-        <div className="mt-2 text-sm text-gray-600">
-          Showing data from {format(dateRange.start, 'MMM dd, yyyy')} to {format(dateRange.end, 'MMM dd, yyyy')}
-      </div>
-      </div>
+          {/* Time Filter Controls */}
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300">
+            <div className="flex flex-wrap items-center gap-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-lg">
+                  <FaCalendar className="w-4 h-4 text-white" />
+                </div>
+                <span className="text-sm font-semibold text-gray-700">Time Period:</span>
+              </div>
+              
+              <div className="flex flex-wrap gap-3">
+                {[
+                  { id: 'weekly', label: 'Last 7 Days' },
+                  { id: 'monthly', label: 'Last 30 Days' },
+                  { id: 'quarterly', label: 'Last 3 Months' },
+                  { id: 'yearly', label: 'Last Year' }
+                ].map(filter => (
+                  <button
+                    key={filter.id}
+                    onClick={() => {
+                      setTimeFilter(filter.id as TimeFilter);
+                      setCustomDateRange({ start: '', end: '' });
+                    }}
+                    className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 transform hover:-translate-y-0.5 ${
+                      timeFilter === filter.id 
+                        ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg' 
+                        : 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200'
+                    }`}
+                  >
+                    {filter.label}
+                  </button>
+                ))}
+              </div>
+
+              <div className="flex items-center gap-3 ml-auto">
+                <span className="text-sm font-semibold text-gray-600">Custom Range:</span>
+                <input
+                  type="date"
+                  value={customDateRange.start}
+                  onChange={(e) => {
+                    setCustomDateRange(prev => ({ ...prev, start: e.target.value }));
+                    if (e.target.value && customDateRange.end) {
+                      setTimeFilter('custom');
+                    }
+                  }}
+                  className="px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200"
+                />
+                <span className="text-sm text-gray-600">to</span>
+                <input
+                  type="date"
+                  value={customDateRange.end}
+                  onChange={(e) => {
+                    setCustomDateRange(prev => ({ ...prev, end: e.target.value }));
+                    if (customDateRange.start && e.target.value) {
+                      setTimeFilter('custom');
+                    }
+                  }}
+                  className="px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200"
+                />
+              </div>
+            </div>
+            
+            <div className="mt-4 flex items-center gap-2">
+              <div className="h-1 w-1 bg-indigo-400 rounded-full"></div>
+              <span className="text-sm text-gray-600">
+                Showing data from <span className="font-semibold text-indigo-600">{format(dateRange.start, 'MMM dd, yyyy')}</span> to <span className="font-semibold text-indigo-600">{format(dateRange.end, 'MMM dd, yyyy')}</span>
+              </span>
+            </div>
+          </div>
 
       {/* Report Content */}
       <div ref={reportRef} className="space-y-6">
@@ -1098,82 +1123,80 @@ const Reports: React.FC = () => {
         {activeTab === 'overview' && (
           <>
             {/* Key Metrics Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 md:p-6 hover:shadow-md transition-shadow">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-600 mb-1">Total Gross Income</p>
-                    <p className="text-2xl md:text-3xl font-bold text-green-600 mb-2">
-                      ${metrics.totalIncome.toLocaleString()}
-                    </p>
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs text-gray-500">Growth:</span>
-                      <div className="flex items-center">
-                        {metrics.revenueGrowth >= 0 ? (
-                          <FaTrendUp className="text-green-500 mr-1 w-3 h-3" />
-                        ) : (
-                          <FaTrendDown className="text-red-500 mr-1 w-3 h-3" />
-                        )}
-                        <span className={`text-xs font-medium ${metrics.revenueGrowth >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                          {Math.abs(metrics.revenueGrowth).toFixed(1)}%
-                        </span>
-                      </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="group bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 cursor-pointer overflow-hidden relative">
+                <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-full opacity-10 transform translate-x-8 -translate-y-8"></div>
+                <div className="relative">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="p-3 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl shadow-lg">
+                      <FaDollarSign className="w-6 h-6 text-white" />
+                    </div>
+                    <div className="text-right">
+                      <p className="text-3xl font-bold text-emerald-600">${metrics.totalIncome.toLocaleString()}</p>
+                      <p className="text-sm text-gray-500">Total Income</p>
                     </div>
                   </div>
-                  <div className="p-3 bg-green-100 rounded-full ml-4">
-                    <FaDollarSign className="text-green-600 text-xl" />
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-gray-500">Growth:</span>
+                    <div className="flex items-center">
+                      {metrics.revenueGrowth >= 0 ? (
+                        <FaTrendUp className="text-emerald-500 mr-1 w-3 h-3" />
+                      ) : (
+                        <FaTrendDown className="text-red-500 mr-1 w-3 h-3" />
+                      )}
+                      <span className={`text-xs font-medium ${metrics.revenueGrowth >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                        {Math.abs(metrics.revenueGrowth).toFixed(1)}%
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 md:p-6">
-                <div className="flex items-center justify-between">
-          <div>
-                    <p className="text-sm font-medium text-gray-600">Total Expenses</p>
-                    <p className="text-xl md:text-2xl font-bold text-red-600">
-                      ${metrics.totalExpenses.toLocaleString()}
-                    </p>
-                    <p className="text-sm text-gray-500 mt-2">
-                      Net: ${metrics.netProfit.toLocaleString()}
-                    </p>
-            </div>
-                  <div className="p-2 md:p-3 bg-red-100 rounded-full">
-                    <FaChartLine className="text-red-600 text-lg md:text-xl" />
+              <div className="group bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 cursor-pointer overflow-hidden relative">
+                <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-red-400 to-red-600 rounded-full opacity-10 transform translate-x-8 -translate-y-8"></div>
+                <div className="relative">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="p-3 bg-gradient-to-br from-red-500 to-red-600 rounded-xl shadow-lg">
+                      <FaChartLine className="w-6 h-6 text-white" />
+                    </div>
+                    <div className="text-right">
+                      <p className="text-3xl font-bold text-red-600">${metrics.totalExpenses.toLocaleString()}</p>
+                      <p className="text-sm text-gray-500">Total Expenses</p>
+                    </div>
                   </div>
+                  <p className="text-gray-600 mb-3">Net: ${metrics.netProfit.toLocaleString()}</p>
                 </div>
               </div>
 
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 md:p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Pending Invoices</p>
-                    <p className="text-xl md:text-2xl font-bold text-orange-600">
-                      ${metrics.pendingInvoices.toLocaleString()}
-                    </p>
-                    <p className="text-sm text-gray-500 mt-2">
-                      Awaiting payment
-                    </p>
+              <div className="group bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 cursor-pointer overflow-hidden relative">
+                <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full opacity-10 transform translate-x-8 -translate-y-8"></div>
+                <div className="relative">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="p-3 bg-gradient-to-br from-amber-500 to-orange-500 rounded-xl shadow-lg">
+                      <FaProjectDiagram className="w-6 h-6 text-white" />
+                    </div>
+                    <div className="text-right">
+                      <p className="text-3xl font-bold text-amber-600">${metrics.pendingInvoices.toLocaleString()}</p>
+                      <p className="text-sm text-gray-500">Pending Invoices</p>
+                    </div>
                   </div>
-                  <div className="p-2 md:p-3 bg-orange-100 rounded-full">
-                    <FaProjectDiagram className="text-orange-600 text-lg md:text-xl" />
-                  </div>
+                  <p className="text-gray-600 mb-3">Awaiting payment</p>
                 </div>
               </div>
 
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 md:p-6">
-                <div className="flex items-center justify-between">
-          <div>
-                    <p className="text-sm font-medium text-gray-600">Active Projects</p>
-                    <p className="text-xl md:text-2xl font-bold text-purple-600">
-                      {metrics.activeProjects}
-                    </p>
-                    <p className="text-sm text-gray-500 mt-2">
-                      {metrics.overdueProjects} overdue
-                    </p>
+              <div className="group bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 cursor-pointer overflow-hidden relative">
+                <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-purple-400 to-indigo-500 rounded-full opacity-10 transform translate-x-8 -translate-y-8"></div>
+                <div className="relative">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="p-3 bg-gradient-to-br from-purple-500 to-indigo-500 rounded-xl shadow-lg">
+                      <FaUsers className="w-6 h-6 text-white" />
+                    </div>
+                    <div className="text-right">
+                      <p className="text-3xl font-bold text-purple-600">{metrics.activeProjects}</p>
+                      <p className="text-sm text-gray-500">Active Projects</p>
+                    </div>
                   </div>
-                  <div className="p-2 md:p-3 bg-purple-100 rounded-full">
-                    <FaUsers className="text-purple-600 text-lg md:text-xl" />
-                  </div>
+                  <p className="text-gray-600 mb-3">{metrics.overdueProjects} overdue</p>
                 </div>
               </div>
             </div>
@@ -1181,103 +1204,147 @@ const Reports: React.FC = () => {
             {/* Charts Section */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Revenue Trend Chart */}
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 md:p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Revenue Trend</h3>
-                <div className="h-[300px] md:h-[400px]">
+              <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="p-2 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-lg">
+                    <FaChartLine className="w-5 h-5 text-white" />
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900">Revenue Trend</h3>
+                </div>
+                <div className="h-[350px]">
                   <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={chartData.revenueData}>
+                    <AreaChart data={chartData.revenueData}>
                       <defs>
                         <linearGradient id="colorIncome" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#82ca9d" stopOpacity={0.8}/>
-                          <stop offset="95%" stopColor="#82ca9d" stopOpacity={0}/>
+                          <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.8}/>
+                          <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/>
                         </linearGradient>
                       </defs>
-                    <CartesianGrid strokeDasharray="3 3" />
+                      <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
                       <XAxis 
                         dataKey="name" 
-                        tick={{ fontSize: 12 }}
+                        tick={{ fontSize: 12, fill: '#6b7280' }}
                         interval="preserveStartEnd"
                         angle={-45}
                         textAnchor="end"
                         height={60}
                       />
-                      <YAxis tick={{ fontSize: 12 }} />
+                      <YAxis tick={{ fontSize: 12, fill: '#6b7280' }} />
                       <Tooltip 
-                        contentStyle={{ fontSize: '12px' }}
+                        contentStyle={{ 
+                          fontSize: '12px', 
+                          backgroundColor: '#ffffff',
+                          border: '1px solid #e5e7eb',
+                          borderRadius: '12px',
+                          boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
+                        }}
                         formatter={(value: any) => [`$${Number(value).toLocaleString()}`, 'Revenue']}
                       />
-                    <Area 
-                      type="monotone" 
-                      dataKey="income" 
-                        stroke="#82ca9d"
+                      <Area 
+                        type="monotone" 
+                        dataKey="income" 
+                        stroke="#8b5cf6"
+                        strokeWidth={3}
                         fillOpacity={1}
                         fill="url(#colorIncome)"
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
                 </div>
               </div>
 
               {/* Project Status Chart */}
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 md:p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Project Status</h3>
-                <div className="h-[300px] md:h-[400px]">
+              <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="p-2 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-lg">
+                    <FaProjectDiagram className="w-5 h-5 text-white" />
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900">Project Status</h3>
+                </div>
+                <div className="h-[350px]">
                   <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={chartData.projectStatusData}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      outerRadius={80}
-                      fill="#8884d8"
-                      dataKey="value"
+                    <PieChart>
+                      <Pie
+                        data={chartData.projectStatusData}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        outerRadius={100}
+                        fill="#8884d8"
+                        dataKey="value"
                         label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                    >
-                      {chartData.projectStatusData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                      <Tooltip formatter={(value: any) => [value, 'Projects']} />
+                      >
+                        {chartData.projectStatusData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip 
+                        formatter={(value: any) => [value, 'Projects']} 
+                        contentStyle={{ 
+                          backgroundColor: '#ffffff',
+                          border: '1px solid #e5e7eb',
+                          borderRadius: '12px',
+                          boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
+                        }}
+                      />
                       <Legend verticalAlign="bottom" height={36} />
-                  </PieChart>
-                </ResponsiveContainer>
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
               </div>
             </div>
-                </div>
 
             {/* Client Projects Table */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 md:p-6 overflow-hidden">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Top Clients by Projects</h3>
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Projects</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                </tr>
-              </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
+            <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300 overflow-hidden">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-2 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg">
+                  <FaUsers className="w-5 h-5 text-white" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900">Top Clients by Projects</h3>
+              </div>
+              <div className="overflow-hidden rounded-xl border border-gray-100">
+                <table className="min-w-full">
+                  <thead className="bg-gradient-to-r from-purple-50 to-indigo-50">
+                    <tr>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-purple-700 uppercase tracking-wider">Client</th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-purple-700 uppercase tracking-wider">Projects</th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-purple-700 uppercase tracking-wider">Activity</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-100">
                     {chartData.clientProjectData.map((client, index) => (
-                      <tr key={index}>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{client.name}</td>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{client.projects}</td>
-                        <td className="px-4 py-3 whitespace-nowrap">
-                          <div className="flex items-center">
-                            <div className="h-2 w-full bg-gray-200 rounded">
+                      <tr key={index} className="hover:bg-purple-50 transition-colors duration-200">
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center text-white font-semibold text-sm">
+                              {client.name.substring(0, 2).toUpperCase()}
+                            </div>
+                            <span className="font-medium text-gray-900">{client.name}</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800">
+                            {client.projects} project{client.projects !== 1 ? 's' : ''}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
                               <div 
-                                className="h-2 bg-primary-600 rounded" 
+                                className="h-2 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-full transition-all duration-500" 
                                 style={{ width: `${(client.projects || 0) / Math.max(...chartData.clientProjectData.map(c => c.projects || 0)) * 100}%` }}
                               />
-          </div>
-            </div>
+                            </div>
+                            <span className="text-sm font-medium text-gray-600">
+                              {Math.round((client.projects || 0) / Math.max(...chartData.clientProjectData.map(c => c.projects || 0)) * 100)}%
+                            </span>
+                          </div>
                         </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </>
         )}
@@ -1364,6 +1431,8 @@ const Reports: React.FC = () => {
             dateRange={dateRange}
           />
         )}
+      </div>
+        </div>
       </div>
     </div>
   );

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaEye, FaEyeSlash, FaCopy, FaExternalLinkAlt, FaCalendarAlt, FaDollarSign, FaUser, FaLink, FaEdit, FaFileAlt, FaTasks, FaChartLine, FaDownload, FaClock, FaCheckCircle, FaExclamationTriangle, FaFolder, FaUpload, FaCloudUploadAlt, FaFilePdf, FaTrash, FaFileWord, FaFileExcel } from 'react-icons/fa';
+import { FaEye, FaEyeSlash, FaExternalLinkAlt, FaCalendarAlt, FaDollarSign, FaUser, FaLink, FaEdit, FaFileAlt, FaTasks, FaChartLine, FaDownload, FaClock, FaCheckCircle, FaExclamationTriangle, FaFolder, FaFilePdf, FaFileWord, FaFileExcel, FaTrash } from 'react-icons/fa';
 import { Project } from '../services/dataService';
 import { financeService, Transaction } from '../services/financeService';
 
@@ -35,7 +35,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ initialData, clients, onSubmi
     status: initialData?.status || 'not_started',
     start_date: initialData?.start_date ? formatDateForInput(initialData.start_date) : '',
     end_date: initialData?.end_date ? formatDateForInput(initialData.end_date) : '',
-    budget: initialData?.budget || 0,
+    budget: initialData?.static_budget || initialData?.budget || 0,
     description: initialData?.description || '',
     client_id: initialData?.client_id || clients[0]?.id || '',
     project_live_url: initialData?.project_live_url || '',
@@ -43,9 +43,13 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ initialData, clients, onSubmi
     admin_login_url: initialData?.admin_login_url || '',
     username_email: initialData?.username_email || '',
     password: initialData?.password || '',
+    hosting_login_url: initialData?.hosting_login_url || '',
+    hosting_username_email: initialData?.hosting_username_email || '',
+    hosting_password: initialData?.hosting_password || '',
   });
 
   const [showPassword, setShowPassword] = useState(false);
+  const [showHostingPassword, setShowHostingPassword] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [projectExpenses, setProjectExpenses] = useState<Transaction[]>([]);
   const [loadingExpenses, setLoadingExpenses] = useState(false);
@@ -102,18 +106,43 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ initialData, clients, onSubmi
     }
   };
 
-  const handleProjectFilesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      const newFiles = Array.from(e.target.files);
-      setProjectFiles(prev => [...prev, ...newFiles]);
-    }
-  };
-
   const removeProjectFile = (index: number, isExisting: boolean = false) => {
     if (isExisting) {
       setExistingFiles(prev => prev.filter((_, i) => i !== index));
     } else {
-      setProjectFiles(prev => prev.filter((_, i) => i !== index));
+      setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+    }
+  };
+
+  const handleFileDownload = (fileName: string) => {
+    // Create a download link for the file
+    // In a real application, this would download from a server
+    const link = document.createElement('a');
+    link.href = `#`; // In real app, this would be the file URL from server
+    link.download = fileName;
+    link.click();
+    
+    // For now, just show an alert since we don't have actual file URLs
+    alert(`Downloading: ${fileName}`);
+  };
+
+  const handleFilePreview = (fileName: string) => {
+    // Open file in a new window/tab for preview
+    const fileExtension = fileName.split('.').pop()?.toLowerCase();
+    
+    // Create a mock file URL for demonstration
+    const fileUrl = `/api/files/project/${initialData?.id || 'demo'}/${fileName}`;
+    
+    if (['jpg', 'jpeg', 'png', 'gif', 'pdf'].includes(fileExtension || '')) {
+      // Open file in new tab for preview
+      window.open(fileUrl, '_blank');
+    } else if (['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'].includes(fileExtension || '')) {
+      // For office documents, try to open with Google Docs viewer
+      const viewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(window.location.origin + fileUrl)}`;
+      window.open(viewerUrl, '_blank');
+    } else {
+      // For other file types, try to open directly
+      window.open(fileUrl, '_blank');
     }
   };
 
@@ -160,15 +189,16 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ initialData, clients, onSubmi
       admin_login_url: formData.admin_login_url.trim() || null,
       username_email: formData.username_email.trim() || null,
       password: formData.password.trim() || null,
+      hosting_login_url: formData.hosting_login_url.trim() || null,
+      hosting_username_email: formData.hosting_username_email.trim() || null,
+      hosting_password: formData.hosting_password.trim() || null,
     };
 
     console.log('Submitting project data:', submissionData);
     onSubmit(submissionData);
   };
 
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-  };
+
 
   const calculateProjectDuration = () => {
     if (!formData.start_date || !formData.end_date) {
@@ -226,34 +256,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ initialData, clients, onSubmi
     }
   };
 
-  const renderCopyableField = (label: string, name: string, value: string, type: string = 'text') => {
-    return (
-      <div>
-        <label htmlFor={name} className="block text-sm font-medium text-gray-700">
-          {label}
-        </label>
-        <div className="mt-1 relative">
-          <input
-            type={type}
-            id={name}
-            name={name}
-            value={value}
-            onChange={handleChange}
-            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 pr-20"
-            required
-          />
-          <button
-            type="button"
-            onClick={() => copyToClipboard(value)}
-            className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
-            title="Copy to clipboard"
-          >
-            <FaCopy />
-          </button>
-        </div>
-      </div>
-    );
-  };
+
 
   if (isViewMode) {
     const completedTasks = initialData?.tasks?.filter(task => task.status === 'completed').length || 0;
@@ -495,13 +498,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ initialData, clients, onSubmi
                     >
                       <FaExternalLinkAlt className="w-3 h-3" />
                     </button>
-                    <button
-                      onClick={() => copyToClipboard(formData.project_live_url)}
-                      className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-200 rounded transition-colors"
-                      title="Copy to clipboard"
-                    >
-                      <FaCopy className="w-3 h-3" />
-                    </button>
+
                   </div>
                 </div>
               )}
@@ -524,13 +521,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ initialData, clients, onSubmi
                     >
                       <FaExternalLinkAlt className="w-3 h-3" />
                     </button>
-                    <button
-                      onClick={() => copyToClipboard(formData.admin_login_url)}
-                      className="p-1 text-purple-600 hover:text-purple-800 hover:bg-purple-200 rounded transition-colors"
-                      title="Copy to clipboard"
-                    >
-                      <FaCopy className="w-3 h-3" />
-                    </button>
+
                   </div>
                 </div>
               )}
@@ -542,13 +533,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ initialData, clients, onSubmi
                     <div className="text-sm text-gray-900 flex-1 font-mono">
                       {formData.username_email}
                     </div>
-                    <button
-                      onClick={() => copyToClipboard(formData.username_email)}
-                      className="p-1 text-gray-600 hover:text-gray-800 hover:bg-gray-200 rounded transition-colors"
-                      title="Copy to clipboard"
-                    >
-                      <FaCopy className="w-3 h-3" />
-                    </button>
+
                   </div>
                 </div>
               )}
@@ -567,20 +552,77 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ initialData, clients, onSubmi
                     >
                       {showPassword ? <FaEyeSlash className="w-3 h-3" /> : <FaEye className="w-3 h-3" />}
                     </button>
-                    <button
-                      onClick={() => copyToClipboard(formData.password)}
-                      className="p-1 text-gray-600 hover:text-gray-800 hover:bg-gray-200 rounded transition-colors"
-                      title="Copy to clipboard"
-                    >
-                      <FaCopy className="w-3 h-3" />
-                    </button>
+
                   </div>
                 </div>
               )}
             </div>
         </div>
 
+        {/* Hosting Login Details */}
+        {(formData.hosting_login_url || formData.hosting_username_email || formData.hosting_password) && (
+          <div className="bg-white rounded-lg p-5 shadow-sm border border-gray-100">
+            <div className="flex items-center mb-4">
+              <div className="p-1.5 bg-green-100 rounded-md mr-3">
+                <FaLink className="w-4 h-4 text-green-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900">Hosting Login Details</h3>
+            </div>
+            
+            <div className="space-y-4">
+              {formData.hosting_login_url && (
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Hosting URL</label>
+                  <div className="flex items-center gap-2 bg-green-50 p-2 rounded border border-green-200">
+                    <div 
+                      className="text-sm text-green-700 hover:text-green-900 cursor-pointer flex-1 truncate" 
+                      onClick={() => window.open(formData.hosting_login_url, '_blank')}
+                      title={formData.hosting_login_url}
+                    >
+                      {formData.hosting_login_url}
+                    </div>
+                    <button
+                      onClick={() => window.open(formData.hosting_login_url, '_blank')}
+                      className="p-1 text-green-600 hover:text-green-800 hover:bg-green-200 rounded transition-colors"
+                      title="Open in new tab"
+                    >
+                      <FaExternalLinkAlt className="w-3 h-3" />
+                    </button>
+                  </div>
+                </div>
+              )}
 
+              {formData.hosting_username_email && (
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Hosting Username/Email</label>
+                  <div className="flex items-center gap-2 bg-gray-50 p-2 rounded border border-gray-200">
+                    <div className="text-sm text-gray-900 flex-1 font-mono">
+                      {formData.hosting_username_email}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {formData.hosting_password && (
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Hosting Password</label>
+                  <div className="flex items-center gap-2 bg-gray-50 p-2 rounded border border-gray-200">
+                    <div className="text-sm text-gray-900 flex-1 font-mono">
+                      {showHostingPassword ? formData.hosting_password : '••••••••••••'}
+                    </div>
+                    <button
+                      onClick={() => setShowHostingPassword(!showHostingPassword)}
+                      className="p-1 text-gray-600 hover:text-gray-800 hover:bg-gray-200 rounded transition-colors"
+                      title={showHostingPassword ? "Hide password" : "Show password"}
+                    >
+                      {showHostingPassword ? <FaEyeSlash className="w-3 h-3" /> : <FaEye className="w-3 h-3" />}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Tasks Section */}
         <div className="bg-white rounded-lg p-5 shadow-sm border border-gray-100">
@@ -653,58 +695,11 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ initialData, clients, onSubmi
                 </span>
               )}
             </div>
-            <button
-              type="button"
-              className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors"
-              onClick={() => {
-                // Trigger file upload
-                const fileInput = document.createElement('input');
-                fileInput.type = 'file';
-                fileInput.multiple = true;
-                fileInput.accept = '.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar,.jpg,.jpeg,.png,.gif';
-                fileInput.onchange = (e) => {
-                  const files = (e.target as HTMLInputElement).files;
-                  if (files) {
-                    // Add files to existing files list
-                    const newFileNames = Array.from(files).map(file => file.name);
-                    setExistingFiles(prev => [...prev, ...newFileNames]);
-                    // Here you would typically upload to a server
-                    console.log('Files selected:', Array.from(files));
-                  }
-                };
-                fileInput.click();
-              }}
-            >
-              <FaUpload className="w-3 h-3" />
-              Upload Files
-            </button>
+
           </div>
 
           {existingFiles.length > 0 ? (
             <>
-              {/* File Upload Area - Show when files exist */}
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-gray-400 transition-colors mb-4 cursor-pointer"
-                   onClick={() => {
-                     const fileInput = document.createElement('input');
-                     fileInput.type = 'file';
-                     fileInput.multiple = true;
-                     fileInput.accept = '.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar,.jpg,.jpeg,.png,.gif';
-                     fileInput.onchange = (e) => {
-                       const files = (e.target as HTMLInputElement).files;
-                       if (files) {
-                         const newFileNames = Array.from(files).map(file => file.name);
-                         setExistingFiles(prev => [...prev, ...newFileNames]);
-                       }
-                     };
-                     fileInput.click();
-                   }}>
-                <FaCloudUploadAlt className="mx-auto h-8 w-8 text-gray-400 mb-2" />
-                <div className="text-sm text-gray-600">
-                  <p className="font-medium">Drop files here or click to browse</p>
-                  <p className="text-xs text-gray-500">PDF, DOC, XLS, PPT, Images, Archives</p>
-                </div>
-              </div>
-
               {/* Files List */}
               <div className="space-y-3">
                 {existingFiles.map((file, index) => {
@@ -747,28 +742,17 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ initialData, clients, onSubmi
                           type="button"
                           className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
                           title="Download"
-                          onClick={() => {
-                            // Here you would implement file download
-                            console.log('Download file:', file);
-                          }}
+                          onClick={() => handleFileDownload(file)}
                         >
                           <FaDownload className="w-3 h-3" />
                         </button>
                         <button
                           type="button"
-                          className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors"
-                          title="Copy file name"
-                          onClick={() => copyToClipboard(file)}
+                          className="p-1.5 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded transition-colors"
+                          title="Preview file"
+                          onClick={() => handleFilePreview(file)}
                         >
-                          <FaCopy className="w-3 h-3" />
-                        </button>
-                        <button
-                          type="button"
-                          className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
-                          title="Delete file"
-                          onClick={() => removeProjectFile(index, true)}
-                        >
-                          <FaTrash className="w-3 h-3" />
+                          <FaEye className="w-3 h-3" />
                         </button>
                       </div>
                     </div>
@@ -778,27 +762,10 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ initialData, clients, onSubmi
             </>
           ) : (
             /* Empty state when no files */
-            <div className="text-center p-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300 cursor-pointer hover:border-gray-400 transition-colors"
-                 onClick={() => {
-                   const fileInput = document.createElement('input');
-                   fileInput.type = 'file';
-                   fileInput.multiple = true;
-                   fileInput.accept = '.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar,.jpg,.jpeg,.png,.gif';
-                   fileInput.onchange = (e) => {
-                     const files = (e.target as HTMLInputElement).files;
-                     if (files) {
-                       const newFileNames = Array.from(files).map(file => file.name);
-                       setExistingFiles(newFileNames);
-                     }
-                   };
-                   fileInput.click();
-                 }}>
-              <FaCloudUploadAlt className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+            <div className="text-center p-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+              <FaFolder className="mx-auto h-12 w-12 text-gray-400 mb-4" />
               <h4 className="text-base font-semibold text-gray-900 mb-2">No project files yet</h4>
-              <p className="text-sm text-gray-500 mb-3">Upload project documents, images, or files here.</p>
-              <div className="text-xs text-gray-400">
-                Supports: PDF, DOC, XLS, PPT, Images, Archives (Max 10MB each)
-              </div>
+              <p className="text-sm text-gray-500">Files will appear here when they are added to this project.</p>
             </div>
           )}
         </div>
@@ -957,7 +924,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ initialData, clients, onSubmi
             type="file"
             id="project_files"
             multiple
-            onChange={handleProjectFilesChange}
+            onChange={handleFileInputChange}
             className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100"
             accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar,.jpg,.jpeg,.png,.gif"
           />
@@ -988,11 +955,11 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ initialData, clients, onSubmi
         )}
 
         {/* Display newly selected files */}
-        {projectFiles.length > 0 && (
+        {selectedFiles.length > 0 && (
           <div className="mt-3">
             <p className="text-sm font-medium text-gray-700 mb-2">New Files:</p>
             <div className="space-y-2">
-              {projectFiles.map((file, index) => (
+              {selectedFiles.map((file, index) => (
                 <div key={`new-${index}`} className="flex items-center justify-between p-2 bg-blue-50 rounded-md">
                   <div className="flex-1">
                     <span className="text-sm text-gray-700">{file.name}</span>
@@ -1064,14 +1031,67 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ initialData, clients, onSubmi
           >
             {showPassword ? <FaEyeSlash /> : <FaEye />}
           </button>
-          <button
-            type="button"
-            onClick={() => copyToClipboard(formData.password)}
-            className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
-            title="Copy to clipboard"
-          >
-            <FaCopy />
-          </button>
+
+        </div>
+      </div>
+
+      {/* Hosting Login Section */}
+      <div className="border-t pt-6">
+        <h3 className="text-lg font-medium text-gray-900 mb-4">Hosting Login Details</h3>
+        
+        <div>
+          <label htmlFor="hosting_login_url" className="block text-sm font-medium text-gray-700">
+            Hosting Login URL
+          </label>
+          <input
+            type="url"
+            id="hosting_login_url"
+            name="hosting_login_url"
+            value={formData.hosting_login_url}
+            onChange={handleChange}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+            placeholder="https://hosting.example.com/login"
+          />
+        </div>
+
+        <div>
+          <label htmlFor="hosting_username_email" className="block text-sm font-medium text-gray-700">
+            Hosting Username/Email
+          </label>
+          <input
+            type="text"
+            id="hosting_username_email"
+            name="hosting_username_email"
+            value={formData.hosting_username_email}
+            onChange={handleChange}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+            placeholder="hosting@example.com or username"
+          />
+        </div>
+
+        <div>
+          <label htmlFor="hosting_password" className="block text-sm font-medium text-gray-700">
+            Hosting Password
+          </label>
+          <div className="mt-1 relative">
+            <input
+              type={showHostingPassword ? "text" : "password"}
+              id="hosting_password"
+              name="hosting_password"
+              value={formData.hosting_password}
+              onChange={handleChange}
+              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 pr-20"
+              placeholder="Enter hosting password"
+            />
+            <button
+              type="button"
+              onClick={() => setShowHostingPassword(!showHostingPassword)}
+              className="absolute right-12 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+              title={showHostingPassword ? "Hide password" : "Show password"}
+            >
+              {showHostingPassword ? <FaEyeSlash /> : <FaEye />}
+            </button>
+          </div>
         </div>
       </div>
 

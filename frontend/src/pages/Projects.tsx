@@ -3,7 +3,7 @@ import Modal from '../components/Modal';
 import ProjectForm from '../components/ProjectForm';
 import TaskForm from '../components/TaskForm';
 import { Menu, Transition } from '@headlessui/react';
-import { FaEye, FaEdit, FaTrash, FaTasks } from 'react-icons/fa';
+import { FaEye, FaEdit, FaTrash, FaTasks, FaPlus, FaProjectDiagram, FaUsers, FaDollarSign, FaCalendarAlt, FaSpinner, FaExclamationTriangle, FaCheckCircle, FaClock, FaArrowUp } from 'react-icons/fa';
 import { Project, Client, Task, ProjectStatus } from '../services/dataService';
 import { apiService } from '../services/apiService';
 import { Link } from 'react-router-dom';
@@ -168,18 +168,12 @@ const Projects = () => {
       console.log('Current project data:', projectToUpdate);
       console.log('New status:', newStatus);
 
-      // Only send the minimal required data for update
+      // Only send the status field to avoid overwriting other data
       const updateData = {
-        title: projectToUpdate.title,
-        description: projectToUpdate.description || '',
-        status: newStatus,
-        client_id: projectToUpdate.client_id,
-        start_date: projectToUpdate.start_date,
-        end_date: projectToUpdate.end_date,
-        budget: projectToUpdate.budget
+        status: newStatus
       };
 
-      console.log('Sending update data:', updateData);
+      console.log('Sending status update only:', updateData);
 
       // Optimistically update UI
       setProjects(prev => prev.map(project =>
@@ -190,10 +184,11 @@ const Projects = () => {
         const updatedProject = await apiService.updateProject(projectId, updateData);
         console.log('Project updated successfully:', updatedProject);
         
-        // Update with server response
-        setProjects(prev => prev.map(project =>
-          project.id === projectId ? updatedProject : project
-        ));
+        // Instead of relying on the single response, refetch all projects to ensure data integrity
+        const allProjects = await apiService.getProjects();
+        console.log('Refetched projects after status update:', allProjects);
+        setProjects(allProjects);
+        
       } catch (error) {
         console.error('Failed to update project status:', error);
         
@@ -217,135 +212,321 @@ const Projects = () => {
     ? projects
     : projects.filter(project => project.status === selectedStatus);
 
+  // Calculate stats
+  const completedProjects = projects.filter(p => p.status === 'completed');
+  const inProgressProjects = projects.filter(p => p.status === 'in_progress');
+  const totalBudget = projects.reduce((sum, project) => {
+    const budget = Number(project.static_budget) || 0;
+    return sum + budget;
+  }, 0);
+
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-emerald-50 to-green-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="relative">
+            <div className="w-20 h-20 border-4 border-emerald-200 rounded-full animate-spin border-t-emerald-600 mx-auto mb-6"></div>
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+              <div className="w-8 h-8 bg-emerald-600 rounded-full animate-pulse"></div>
+            </div>
+          </div>
+          <div className="text-xl font-semibold text-gray-700 mb-2">Loading Projects</div>
+          <div className="text-sm text-gray-500">Fetching your project data...</div>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-red-600">{error}</div>
+      <div className="min-h-screen bg-gradient-to-br from-red-50 via-pink-50 to-rose-100 flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto p-8">
+          <div className="bg-white rounded-2xl shadow-xl p-8">
+            <FaExclamationTriangle className="text-5xl text-red-500 mx-auto mb-6" />
+            <div className="text-xl font-semibold text-gray-800 mb-4">Unable to load projects</div>
+            <div className="text-gray-600 mb-6">{error}</div>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-6 py-3 bg-gradient-to-r from-red-500 to-pink-600 text-white rounded-xl hover:from-red-600 hover:to-pink-700 transition-all duration-200 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+            >
+              Try Again
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-gray-800">Projects</h1>
-        <div className="flex items-center gap-4">
-          <StatusFilter
-            selectedStatus={selectedStatus}
-            onStatusChange={handleStatusChange}
-          />
-          <button
-            onClick={handleAddProject}
-            className="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors"
-          >
-            Add New Project
-          </button>
-        </div>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-emerald-50 to-green-100">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="space-y-8">
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+            <div className="space-y-2">
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 via-emerald-800 to-green-800 bg-clip-text text-transparent">
+                Projects
+              </h1>
+              <p className="text-lg text-gray-600">Manage your project portfolio and track progress</p>
+            </div>
+            <div className="flex items-center gap-4">
+              <StatusFilter
+                selectedStatus={selectedStatus}
+                onStatusChange={handleStatusChange}
+              />
+              <button
+                onClick={handleAddProject}
+                className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-emerald-600 to-green-600 text-white rounded-xl hover:from-emerald-700 hover:to-green-700 transition-all duration-200 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+              >
+                <FaPlus className="w-4 h-4" />
+                Add New Project
+              </button>
+            </div>
+          </div>
 
-      <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-visible">
-        <div className="overflow-visible">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project ID</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project Name</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Budget</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Timeline</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tasks</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {filteredProjects.length === 0 ? (
-                <tr>
-                  <td colSpan={8} className="px-6 py-4 text-center text-gray-500">
-                    No projects found. Click "Add New Project" to create one.
-                  </td>
-                </tr>
-              ) : (
-                filteredProjects.map((project) => (
-                  <tr key={project.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{project.id}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{project.title}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {clients.find(c => c.id === project.client_id)?.company_name || 'N/A'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <StatusMenu
-                        currentStatus={project.status}
-                        onStatusChange={(newStatus) => handleStatusUpdate(project.id, newStatus)}
-                        size="sm"
-                      />
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      <div className="group relative">
-                        <span className="cursor-help">
-                          ${project.budget ? Number(project.budget).toLocaleString() : '0'}
-                        </span>
-                        {(project.static_budget || project.total_payments || project.total_expenses) && (
-                          <div className="opacity-0 group-hover:opacity-100 absolute bottom-full left-0 mb-2 bg-gray-800 text-white text-xs rounded p-2 whitespace-nowrap z-10 transition-opacity">
-                            <div>Static Budget: ${Number(project.static_budget || 0).toLocaleString()}</div>
-                            <div className="text-green-300">+ Payments: ${Number(project.total_payments || 0).toLocaleString()}</div>
-                            <div className="text-red-300">- Expenses: ${Number(project.total_expenses || 0).toLocaleString()}</div>
-                            <div className="border-t border-gray-600 pt-1 mt-1">
-                              <strong>Total: ${Number(project.budget || 0).toLocaleString()}</strong>
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="group bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 overflow-hidden relative">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-full opacity-10 transform translate-x-8 -translate-y-8"></div>
+              <div className="relative">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="p-3 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl shadow-lg">
+                    <FaProjectDiagram className="w-6 h-6 text-white" />
+                  </div>
+                  <div className="text-right">
+                    <p className="text-3xl font-bold text-emerald-600">{projects.length}</p>
+                    <p className="text-sm text-gray-500">Total Projects</p>
+                  </div>
+                </div>
+                <p className="text-gray-600">All project initiatives</p>
+              </div>
+            </div>
+
+            <div className="group bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 overflow-hidden relative">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full opacity-10 transform translate-x-8 -translate-y-8"></div>
+              <div className="relative">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="p-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg">
+                    <FaUsers className="w-6 h-6 text-white" />
+                  </div>
+                  <div className="text-right">
+                    <p className="text-3xl font-bold text-blue-600">{inProgressProjects.length}</p>
+                    <p className="text-sm text-gray-500">In Progress</p>
+                  </div>
+                </div>
+                <p className="text-gray-600">Active development</p>
+              </div>
+            </div>
+
+            <div className="group bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 overflow-hidden relative">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-green-400 to-green-600 rounded-full opacity-10 transform translate-x-8 -translate-y-8"></div>
+              <div className="relative">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="p-3 bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-lg">
+                    <FaCheckCircle className="w-6 h-6 text-white" />
+                  </div>
+                  <div className="text-right">
+                    <p className="text-3xl font-bold text-green-600">{completedProjects.length}</p>
+                    <p className="text-sm text-gray-500">Completed</p>
+                  </div>
+                </div>
+                <p className="text-gray-600">Successfully delivered</p>
+              </div>
+            </div>
+
+            <div className="group bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 overflow-hidden relative">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full opacity-10 transform translate-x-8 -translate-y-8"></div>
+              <div className="relative">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="p-3 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-lg">
+                    <FaDollarSign className="w-6 h-6 text-white" />
+                  </div>
+                  <div className="text-right">
+                    <p className="text-3xl font-bold text-purple-600">
+                      ${totalBudget.toLocaleString()}
+                    </p>
+                    <p className="text-sm text-gray-500">Total Budget</p>
+                  </div>
+                </div>
+                <p className="text-gray-600">Combined project value</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Projects Table */}
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-gray-100">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-lg">
+                  <FaProjectDiagram className="w-5 h-5 text-white" />
+                </div>
+                <h2 className="text-xl font-bold text-gray-900">Project Portfolio</h2>
+              </div>
+            </div>
+
+            {filteredProjects.length === 0 ? (
+              <div className="text-center py-16">
+                <div className="p-6 bg-gradient-to-br from-emerald-100 to-emerald-200 rounded-full w-24 h-24 mx-auto mb-6 flex items-center justify-center">
+                  <FaProjectDiagram className="w-12 h-12 text-emerald-600" />
+                </div>
+                <h3 className="text-xl font-semibold text-gray-700 mb-2">
+                  {selectedStatus === 'all' ? 'No projects yet' : `No ${selectedStatus.replace('_', ' ')} projects`}
+                </h3>
+                <p className="text-gray-500 mb-6">
+                  {selectedStatus === 'all' 
+                    ? 'Start your journey by creating your first project' 
+                    : `No projects match the ${selectedStatus.replace('_', ' ')} filter`
+                  }
+                </p>
+                {selectedStatus === 'all' && (
+                  <button
+                    onClick={handleAddProject}
+                    className="px-6 py-3 bg-gradient-to-r from-emerald-600 to-green-600 text-white rounded-xl hover:from-emerald-700 hover:to-green-700 transition-all duration-200 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                  >
+                    Create Your First Project
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="min-w-full">
+                  <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
+                    <tr>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        <div className="flex items-center gap-2">
+                          <FaProjectDiagram className="w-4 h-4" />
+                          Project Details
+                        </div>
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        <div className="flex items-center gap-2">
+                          <FaUsers className="w-4 h-4" />
+                          Client
+                        </div>
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        <div className="flex items-center gap-2">
+                          <FaDollarSign className="w-4 h-4" />
+                          Budget
+                        </div>
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        <div className="flex items-center gap-2">
+                          <FaCalendarAlt className="w-4 h-4" />
+                          Timeline
+                        </div>
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        <div className="flex items-center gap-2">
+                          <FaTasks className="w-4 h-4" />
+                          Tasks
+                        </div>
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-100">
+                    {filteredProjects.map((project) => (
+                      <tr key={project.id} className="hover:bg-gradient-to-r hover:from-emerald-50 hover:to-green-50 transition-all duration-200">
+                        <td className="px-6 py-5">
+                          <div className="flex items-center">
+                            <div className="flex-shrink-0 h-12 w-12 mr-4">
+                              <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-emerald-500 to-green-600 flex items-center justify-center shadow-lg">
+                                <span className="text-white font-semibold text-lg">
+                                  {project.title.charAt(0).toUpperCase()}
+                                </span>
+                              </div>
+                            </div>
+                            <div>
+                              <div className="text-sm font-semibold text-gray-900">{project.title}</div>
+                              <div className="text-sm text-gray-500">ID: {project.id}</div>
                             </div>
                           </div>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      Due: {project.end_date ? new Date(project.end_date).toLocaleDateString() : 'Not set'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      <button
-                        onClick={() => handleAddTask(project)}
-                        className="text-primary-600 hover:text-primary-900 flex items-center space-x-1"
-                        title="Manage Tasks"
-                      >
-                        <FaTasks className="inline" />
-                        <span>{typeof project.task_count === 'number' ? project.task_count : 0}</span>
-                      </button>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 space-x-2">
-                      <button
-                        onClick={() => handleViewProject(project)}
-                        className="text-blue-600 hover:text-blue-900"
-                        title="View"
-                      >
-                        <FaEye />
-                      </button>
-                      <button
-                        onClick={() => handleEditProject(project)}
-                        className="text-primary-600 hover:text-primary-900"
-                        title="Edit"
-                      >
-                        <FaEdit />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteProject(project.id)}
-                        className="text-red-600 hover:text-red-900"
-                        title="Delete"
-                      >
-                        <FaTrash />
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                        </td>
+                        <td className="px-6 py-5">
+                          <div className="text-sm font-medium text-gray-900">
+                            {clients.find(c => c.id === project.client_id)?.company_name || 'N/A'}
+                          </div>
+                        </td>
+                        <td className="px-6 py-5">
+                          <StatusMenu
+                            currentStatus={project.status}
+                            onStatusChange={(newStatus) => handleStatusUpdate(project.id, newStatus)}
+                            size="sm"
+                          />
+                        </td>
+                        <td className="px-6 py-5">
+                          <div className="group relative">
+                            <span className="cursor-help font-semibold text-gray-900">
+                              ${project.static_budget ? Number(project.static_budget).toLocaleString() : '0'}
+                            </span>
+                            {(project.static_budget || project.total_payments || project.total_expenses) && (
+                              <div className="opacity-0 group-hover:opacity-100 absolute bottom-full left-0 mb-2 bg-gray-800 text-white text-xs rounded-lg p-3 whitespace-nowrap z-10 transition-opacity shadow-xl">
+                                <div>Static Budget: ${Number(project.static_budget || 0).toLocaleString()}</div>
+                                <div className="text-green-300">+ Payments: ${Number(project.total_payments || 0).toLocaleString()}</div>
+                                <div className="text-red-300">- Expenses: ${Number(project.total_expenses || 0).toLocaleString()}</div>
+                                <div className="border-t border-gray-600 pt-1 mt-1">
+                                  <strong>Total: ${Number(project.budget || 0).toLocaleString()}</strong>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-6 py-5">
+                          <div className="text-sm text-gray-900">
+                            {project.end_date ? (
+                              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200">
+                                <FaClock className="w-3 h-3 mr-1" />
+                                {new Date(project.end_date).toLocaleDateString()}
+                              </span>
+                            ) : (
+                              <span className="text-gray-400 text-sm">Not set</span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-6 py-5">
+                          <button
+                            onClick={() => handleAddTask(project)}
+                            className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-emerald-100 text-emerald-800 border border-emerald-200 hover:bg-emerald-200 transition-all duration-200 transform hover:-translate-y-0.5"
+                            title="Manage Tasks"
+                          >
+                            <FaTasks className="w-3 h-3 mr-1" />
+                            {typeof project.task_count === 'number' ? project.task_count : 0}
+                          </button>
+                        </td>
+                        <td className="px-6 py-5">
+                          <div className="flex items-center space-x-2">
+                            <button
+                              onClick={() => handleViewProject(project)}
+                              className="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-all duration-200 transform hover:-translate-y-0.5"
+                              title="View project"
+                            >
+                              <FaEye className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => handleEditProject(project)}
+                              className="p-2 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg transition-all duration-200 transform hover:-translate-y-0.5"
+                              title="Edit project"
+                            >
+                              <FaEdit className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteProject(project.id)}
+                              className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-all duration-200 transform hover:-translate-y-0.5"
+                              title="Delete project"
+                            >
+                              <FaTrash className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

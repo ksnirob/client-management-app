@@ -13,7 +13,9 @@ import {
   FaEye,
   FaPlus,
   FaArrowUp,
-  FaArrowDown
+  FaArrowDown,
+  FaCalendarAlt,
+  FaFireAlt
 } from 'react-icons/fa';
 import { apiService } from '../services/apiService';
 import { financeService, FinancialSummary } from '../services/financeService';
@@ -168,37 +170,43 @@ const Dashboard = () => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'completed':
-        return 'bg-green-100 text-green-800';
+        return 'bg-emerald-100 text-emerald-800 border-emerald-200';
       case 'in_progress':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-amber-100 text-amber-800 border-amber-200';
       case 'not_started':
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-slate-100 text-slate-700 border-slate-200';
       case 'pending':
-        return 'bg-orange-100 text-orange-800';
+        return 'bg-orange-100 text-orange-800 border-orange-200';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'high':
-        return 'bg-red-100 text-red-800';
+        return 'bg-red-100 text-red-800 border-red-200';
       case 'medium':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-amber-100 text-amber-800 border-amber-200';
       case 'low':
-        return 'bg-green-100 text-green-800';
+        return 'bg-emerald-100 text-emerald-800 border-emerald-200';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
         <div className="text-center">
-          <FaSpinner className="animate-spin text-4xl text-primary-600 mx-auto mb-4" />
-          <div className="text-xl text-gray-600">Loading dashboard...</div>
+          <div className="relative">
+            <div className="w-20 h-20 border-4 border-blue-200 rounded-full animate-spin border-t-blue-600 mx-auto mb-6"></div>
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+              <div className="w-8 h-8 bg-blue-600 rounded-full animate-pulse"></div>
+            </div>
+          </div>
+          <div className="text-xl font-semibold text-gray-700 mb-2">Loading Dashboard</div>
+          <div className="text-sm text-gray-500">Getting your latest data...</div>
         </div>
       </div>
     );
@@ -206,410 +214,500 @@ const Dashboard = () => {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-center">
-          <FaExclamationTriangle className="text-4xl text-red-600 mx-auto mb-4" />
-          <div className="text-xl text-red-600 mb-4">{error}</div>
-          <button
-            onClick={handleRefresh}
-            className="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700"
-          >
-            Try Again
-          </button>
+      <div className="min-h-screen bg-gradient-to-br from-red-50 via-pink-50 to-rose-100 flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto p-8">
+          <div className="bg-white rounded-2xl shadow-xl p-8">
+            <FaExclamationTriangle className="text-5xl text-red-500 mx-auto mb-6" />
+            <div className="text-xl font-semibold text-gray-800 mb-4">Oops! Something went wrong</div>
+            <div className="text-gray-600 mb-6">{error}</div>
+            <button
+              onClick={handleRefresh}
+              className="px-6 py-3 bg-gradient-to-r from-red-500 to-pink-600 text-white rounded-xl hover:from-red-600 hover:to-pink-700 transition-all duration-200 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+            >
+              Try Again
+            </button>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-600 mt-1">Welcome back! Here's what's happening with your business.</p>
-        </div>
-        <div className="flex flex-wrap gap-3">
-          <button
-            onClick={handleRefresh}
-            disabled={refreshing}
-            className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 transition-all duration-200 text-sm sm:text-base"
-          >
-            <FaSpinner className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
-            Refresh
-          </button>
-          <Link
-            to="/projects"
-            className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-all duration-200 text-sm sm:text-base"
-          >
-            <FaPlus className="w-4 h-4" />
-            New Project
-          </Link>
-        </div>
-      </div>
-
-      {/* Quick Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-all duration-200 transform hover:-translate-y-1 cursor-pointer">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Total Clients</p>
-              <p className="text-3xl font-bold text-blue-600">{clients.length}</p>
-              <p className="text-sm text-gray-500 mt-1">Active businesses</p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="space-y-8">
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+            <div className="space-y-2">
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 via-blue-800 to-indigo-800 bg-clip-text text-transparent">
+                Dashboard
+              </h1>
+              <p className="text-lg text-gray-600">Welcome back! Here's what's happening with your business.</p>
             </div>
-            <div className="p-3 bg-blue-100 rounded-full">
-              <FaUsers className="w-6 h-6 text-blue-600" />
-            </div>
-          </div>
-          <Link to="/clients" className="mt-4 text-sm text-blue-600 hover:text-blue-800 font-medium block">View Clients →</Link>
-        </div>
-
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-all duration-200 transform hover:-translate-y-1 cursor-pointer">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Total Projects</p>
-              <p className="text-3xl font-bold text-green-600">{pendingProjects.length}</p>
-              <p className="text-sm text-gray-500 mt-1">{completedProjects.length} completed</p>
-            </div>
-            <div className="p-3 bg-green-100 rounded-full">
-              <FaProjectDiagram className="w-6 h-6 text-green-600" />
-            </div>
-          </div>
-          <Link to="/projects" className="mt-4 text-sm text-green-600 hover:text-green-800 font-medium block">View Projects →</Link>
-        </div>
-
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-all duration-200 transform hover:-translate-y-1 cursor-pointer">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Pending Tasks</p>
-              <p className="text-3xl font-bold text-orange-600">{pendingTasks.length}</p>
-              <p className="text-sm text-red-500 mt-1">{overdueTasks.length} overdue</p>
-            </div>
-            <div className="p-3 bg-orange-100 rounded-full">
-              <FaTasks className="w-6 h-6 text-orange-600" />
-            </div>
-          </div>
-          <Link to="/tasks" className="mt-4 text-sm text-orange-600 hover:text-orange-800 font-medium block">View Tasks →</Link>
-        </div>
-
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-all duration-200 transform hover:-translate-y-1 cursor-pointer">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Monthly Income</p>
-              <p className="text-3xl font-bold text-purple-600">
-                {financialData ? formatCurrency(financialData.monthlyRevenue) : '$0'}
-              </p>
-              <p className="text-sm text-gray-500 mt-1">
-                Net revenue this month
-              </p>
-            </div>
-            <div className="p-3 bg-purple-100 rounded-full">
-              <FaDollarSign className="w-6 h-6 text-purple-600" />
-            </div>
-          </div>
-          <Link to="/finances" className="mt-4 text-sm text-purple-600 hover:text-purple-800 font-medium block">View Finances →</Link>
-        </div>
-      </div>
-
-      {/* Recent Activity */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-        {/* Pending Projects */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6 hover:shadow-md transition-all duration-200">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
-            <h2 className="text-lg sm:text-xl font-semibold text-gray-900">Pending Projects</h2>
-            <span className="text-sm text-gray-500">{pendingProjects.length} total</span>
-          </div>
-          <div className="overflow-x-auto -mx-4 sm:mx-0">
-            <div className="inline-block min-w-full align-middle">
-              <table className="min-w-full">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-3 sm:px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project</th>
-                    <th className="px-3 sm:px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client</th>
-                    <th className="px-3 sm:px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                    <th className="px-3 sm:px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Budget</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {pendingProjects.slice(0, 5).map(project => (
-                    <tr key={project.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-3 text-sm font-medium text-gray-900">{project.title}</td>
-                      <td className="px-4 py-3 text-sm text-gray-600">{project.client_name}</td>
-                      <td className="px-4 py-3">
-                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(project.status)}`}>
-                          {project.status.replace('_', ' ')}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-sm text-gray-900">
-                        {formatCurrency(project.budget)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-          {pendingProjects.length > 5 && (
-            <div className="mt-4 text-center">
-              <Link 
-                to="/projects" 
-                className="text-primary-600 hover:text-primary-800 font-medium text-sm"
+            <div className="flex flex-wrap gap-3">
+              <button
+                onClick={handleRefresh}
+                disabled={refreshing}
+                className="flex items-center gap-2 px-4 py-2.5 bg-white text-gray-700 rounded-xl border border-gray-200 hover:bg-gray-50 hover:border-gray-300 disabled:opacity-50 transition-all duration-200 font-medium shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
               >
-                View {pendingProjects.length - 5} more projects →
-              </Link>
-            </div>
-          )}
-        </div>
-
-        {/* Pending Tasks */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6 hover:shadow-md transition-all duration-200">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
-            <h2 className="text-lg sm:text-xl font-semibold text-gray-900">Pending Tasks</h2>
-            <span className="text-sm text-gray-500">{pendingTasks.length} total</span>
-          </div>
-          <div className="overflow-x-auto -mx-4 sm:mx-0">
-            <div className="inline-block min-w-full align-middle">
-              <table className="min-w-full">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-3 sm:px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Task</th>
-                    <th className="px-3 sm:px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Priority</th>
-                    <th className="px-3 sm:px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Due Date</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {pendingTasks.slice(0, 5).map(task => (
-                    <tr key={task.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-3">
-                        <div className="text-sm font-medium text-gray-900">{task.title}</div>
-                        <div className="text-sm text-gray-500">{task.client_name}</div>
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${getPriorityColor(task.priority)}`}>
-                          {task.priority}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className={`text-sm ${
-                          new Date(task.due_date) < new Date() ? 'text-red-600 font-medium' : 'text-gray-900'
-                        }`}>
-                          {new Date(task.due_date).toLocaleDateString()}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-          {pendingTasks.length > 5 && (
-            <div className="mt-4 text-center">
-              <Link 
-                to="/tasks" 
-                className="text-primary-600 hover:text-primary-800 font-medium text-sm"
+                <FaSpinner className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+                Refresh
+              </button>
+              <Link
+                to="/projects"
+                className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
               >
-                View {pendingTasks.length - 5} more tasks →
-              </Link>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Upcoming Items */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-        {/* Upcoming Projects */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6 hover:shadow-md transition-all duration-200">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
-            <h2 className="text-lg sm:text-xl font-semibold text-gray-900">Upcoming Projects</h2>
-            <Link 
-              to="/projects" 
-              className="text-primary-600 hover:text-primary-800 font-medium text-sm"
-            >
-              View All
-            </Link>
-          </div>
-          {upcomingProjects.length === 0 ? (
-            <div className="text-center py-8">
-              <FaCheckCircle className="w-12 h-12 text-green-500 mx-auto mb-3" />
-              <p className="text-gray-500">No projects to start or due soon</p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {upcomingProjects.map(project => (
-                <div key={project.id} className={`flex items-center justify-between p-3 rounded-lg border ${
-                  project.status === 'not_started' 
-                    ? 'bg-gray-50 border-gray-200' 
-                    : 'bg-blue-50 border-blue-200'
-                }`}>
-                  <div className="flex-1">
-                    <h3 className="font-medium text-gray-900">{project.title}</h3>
-                    <p className="text-sm text-gray-600">{project.client_name}</p>
-                    <p className={`text-sm ${
-                      project.status === 'not_started' 
-                        ? 'text-gray-600' 
-                        : 'text-blue-600'
-                    }`}>
-                      {project.status === 'not_started' 
-                        ? 'Ready to start' 
-                        : `Due: ${project.end_date ? new Date(project.end_date).toLocaleDateString() : 'Not set'}`
-                      }
-                    </p>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(project.status)}`}>
-                      {project.status.replace('_', ' ')}
-                    </span>
-                    <Link 
-                      to="/projects" 
-                      className="text-primary-600 hover:text-primary-800"
-                    >
-                      <FaEye className="w-4 h-4" />
-                    </Link>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Upcoming Tasks */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6 hover:shadow-md transition-all duration-200">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
-            <h2 className="text-lg sm:text-xl font-semibold text-gray-900">Upcoming Tasks</h2>
-            <Link 
-              to="/tasks" 
-              className="text-primary-600 hover:text-primary-800 font-medium text-sm"
-            >
-              View All
-            </Link>
-          </div>
-          {upcomingTasks.length === 0 ? (
-            <div className="text-center py-8">
-              <FaCheckCircle className="w-12 h-12 text-green-500 mx-auto mb-3" />
-              <p className="text-gray-500">No tasks to start or due soon</p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {upcomingTasks.map(task => (
-                <div key={task.id} className={`flex items-center justify-between p-3 rounded-lg border ${
-                  task.status === 'not_started' 
-                    ? 'bg-gray-50 border-gray-200'
-                    : task.status === 'pending' 
-                    ? 'bg-orange-50 border-orange-200' 
-                    : 'bg-yellow-50 border-yellow-200'
-                }`}>
-                  <div className="flex-1">
-                    <h3 className="font-medium text-gray-900">{task.title}</h3>
-                    <p className="text-sm text-gray-600">{task.client_name}</p>
-                    <p className={`text-sm ${
-                      task.status === 'not_started' 
-                        ? 'text-gray-600'
-                        : task.status === 'pending' 
-                        ? 'text-orange-600' 
-                        : 'text-yellow-600'
-                    }`}>
-                      {task.status === 'not_started' 
-                        ? 'Ready to start' 
-                        : task.status === 'pending'
-                        ? 'Waiting to begin'
-                        : `Due: ${new Date(task.due_date).toLocaleDateString()}`
-                      }
-                    </p>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${getPriorityColor(task.priority)}`}>
-                      {task.priority}
-                    </span>
-                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(task.status)}`}>
-                      {task.status.replace('_', ' ')}
-                    </span>
-                    <Link 
-                      to="/tasks" 
-                      className="text-primary-600 hover:text-primary-800"
-                    >
-                      <FaEye className="w-4 h-4" />
-                    </Link>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Financial Overview */}
-      {financialData && (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6 hover:shadow-md transition-all duration-200">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-            <h2 className="text-lg sm:text-xl font-semibold text-gray-900">Financial Overview</h2>
-            <div className="flex flex-wrap items-center gap-4">
-              <select
-                value={timeFilter}
-                onChange={(e) => setTimeFilter(e.target.value)}
-                className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-              >
-                <option value="monthly">Monthly</option>
-                <option value="quarterly">Quarterly</option>
-                <option value="yearly">Yearly</option>
-              </select>
-              <Link 
-                to="/finances" 
-                className="text-primary-600 hover:text-primary-800 font-medium flex items-center gap-2 text-sm"
-              >
-                View Details
-                <FaEye className="w-4 h-4" />
+                <FaPlus className="w-4 h-4" />
+                New Project
               </Link>
             </div>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
-            <div className="bg-green-50 rounded-lg p-4 hover:bg-green-100 transition-colors duration-200">
-              <div className="flex items-center justify-center mb-2">
-                <FaArrowUp className="w-5 h-5 text-green-500 mr-2" />
-                <span className="text-sm font-medium text-gray-600">Total Income</span>
-              </div>
-              <p className="text-xl sm:text-2xl font-bold text-green-600 text-center">
-                {formatCurrency(financialData.grossIncome)}
-              </p>
-            </div>
-            <div className="bg-red-50 rounded-lg p-4 hover:bg-red-100 transition-colors duration-200">
-              <div className="flex items-center justify-center mb-2">
-                <FaArrowDown className="w-5 h-5 text-red-500 mr-2" />
-                <span className="text-sm font-medium text-gray-600">Total Expenses</span>
-              </div>
-              <p className="text-xl sm:text-2xl font-bold text-red-600 text-center">
-                {formatCurrency(financialData.totalExpenses)}
-              </p>
-            </div>
-            <div className="bg-blue-50 rounded-lg p-4 hover:bg-blue-100 transition-colors duration-200">
-              <div className="flex items-center justify-center mb-2">
-                <FaChartLine className="w-5 h-5 text-blue-500 mr-2" />
-                <span className="text-sm font-medium text-gray-600">Net Profit</span>
-              </div>
-              <p className="text-xl sm:text-2xl font-bold text-blue-600 text-center">
-                {formatCurrency(financialData.totalIncome)}
-              </p>
-            </div>
-          </div>
-          {financialData.pendingInvoices.count > 0 && (
-            <div className="mt-6 p-4 bg-yellow-50 rounded-lg border border-yellow-200 hover:bg-yellow-100 transition-colors duration-200">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div className="flex items-center">
-                  <FaClock className="w-5 h-5 text-yellow-600 mr-2 flex-shrink-0" />
-                  <span className="text-sm font-medium text-yellow-800">
-                    {financialData.pendingInvoices.count} pending invoice(s) worth {formatCurrency(financialData.pendingInvoices.total)}
-                  </span>
+
+          {/* Quick Stats Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="group bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 cursor-pointer overflow-hidden relative">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full opacity-10 transform translate-x-8 -translate-y-8"></div>
+              <div className="relative">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="p-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg">
+                    <FaUsers className="w-6 h-6 text-white" />
+                  </div>
+                  <div className="text-right">
+                    <p className="text-3xl font-bold text-blue-600">{clients.length}</p>
+                    <p className="text-sm text-gray-500">Total Clients</p>
+                  </div>
                 </div>
-                <Link 
-                  to="/finances?filter=pending" 
-                  className="text-yellow-600 hover:text-yellow-800 font-medium text-sm whitespace-nowrap"
-                >
-                  View Invoices →
+                <p className="text-gray-600 mb-3">Active businesses</p>
+                <Link to="/clients" className="inline-flex items-center text-blue-600 hover:text-blue-800 font-medium text-sm group-hover:underline">
+                  View Clients
+                  <FaArrowUp className="w-3 h-3 ml-1 transform rotate-45 transition-transform group-hover:translate-x-1" />
                 </Link>
               </div>
             </div>
+
+            <div className="group bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 cursor-pointer overflow-hidden relative">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-full opacity-10 transform translate-x-8 -translate-y-8"></div>
+              <div className="relative">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="p-3 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl shadow-lg">
+                    <FaProjectDiagram className="w-6 h-6 text-white" />
+                  </div>
+                  <div className="text-right">
+                    <p className="text-3xl font-bold text-emerald-600">{pendingProjects.length}</p>
+                    <p className="text-sm text-gray-500">Active Projects</p>
+                  </div>
+                </div>
+                <p className="text-gray-600 mb-3">{completedProjects.length} completed</p>
+                <Link to="/projects" className="inline-flex items-center text-emerald-600 hover:text-emerald-800 font-medium text-sm group-hover:underline">
+                  View Projects
+                  <FaArrowUp className="w-3 h-3 ml-1 transform rotate-45 transition-transform group-hover:translate-x-1" />
+                </Link>
+              </div>
+            </div>
+
+            <div className="group bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 cursor-pointer overflow-hidden relative">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full opacity-10 transform translate-x-8 -translate-y-8"></div>
+              <div className="relative">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="p-3 bg-gradient-to-br from-amber-500 to-orange-500 rounded-xl shadow-lg">
+                    <FaTasks className="w-6 h-6 text-white" />
+                  </div>
+                  <div className="text-right">
+                    <p className="text-3xl font-bold text-amber-600">{pendingTasks.length}</p>
+                    <p className="text-sm text-gray-500">Pending Tasks</p>
+                  </div>
+                </div>
+                <p className="text-gray-600 mb-3">
+                  {overdueTasks.length > 0 && (
+                    <span className="text-red-600 font-medium">{overdueTasks.length} overdue</span>
+                  )}
+                  {overdueTasks.length === 0 && "All on track"}
+                </p>
+                <Link to="/tasks" className="inline-flex items-center text-amber-600 hover:text-amber-800 font-medium text-sm group-hover:underline">
+                  View Tasks
+                  <FaArrowUp className="w-3 h-3 ml-1 transform rotate-45 transition-transform group-hover:translate-x-1" />
+                </Link>
+              </div>
+            </div>
+
+            <div className="group bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 cursor-pointer overflow-hidden relative">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full opacity-10 transform translate-x-8 -translate-y-8"></div>
+              <div className="relative">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="p-3 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-lg">
+                    <FaDollarSign className="w-6 h-6 text-white" />
+                  </div>
+                  <div className="text-right">
+                    <p className="text-3xl font-bold text-purple-600">
+                      {financialData ? formatCurrency(financialData.monthlyRevenue) : '$0'}
+                    </p>
+                    <p className="text-sm text-gray-500">Monthly Income</p>
+                  </div>
+                </div>
+                <p className="text-gray-600 mb-3">Net revenue this month</p>
+                <Link to="/finances" className="inline-flex items-center text-purple-600 hover:text-purple-800 font-medium text-sm group-hover:underline">
+                  View Finances
+                  <FaArrowUp className="w-3 h-3 ml-1 transform rotate-45 transition-transform group-hover:translate-x-1" />
+                </Link>
+              </div>
+            </div>
+          </div>
+
+          {/* Recent Activity */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Pending Projects */}
+            <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-lg">
+                    <FaProjectDiagram className="w-5 h-5 text-white" />
+                  </div>
+                  <h2 className="text-xl font-bold text-gray-900">Pending Projects</h2>
+                </div>
+                <span className="px-3 py-1 bg-emerald-100 text-emerald-800 rounded-full text-sm font-medium">
+                  {pendingProjects.length} total
+                </span>
+              </div>
+              <div className="overflow-hidden rounded-xl border border-gray-100">
+                <table className="min-w-full">
+                  <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Project</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Client</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Budget</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-100">
+                    {pendingProjects.slice(0, 5).map((project, index) => (
+                      <tr key={project.id} className="hover:bg-gray-50 transition-colors duration-200">
+                        <td className="px-4 py-4 text-sm font-medium text-gray-900">{project.title}</td>
+                        <td className="px-4 py-4 text-sm text-gray-600">{project.client_name}</td>
+                        <td className="px-4 py-4">
+                          <span className={`px-3 py-1 text-xs font-medium rounded-full border ${getStatusColor(project.status)}`}>
+                            {project.status.replace('_', ' ')}
+                          </span>
+                        </td>
+                        <td className="px-4 py-4 text-sm font-semibold text-gray-900">
+                          {formatCurrency(project.budget)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              {pendingProjects.length > 5 && (
+                <div className="mt-4 text-center">
+                  <Link 
+                    to="/projects" 
+                    className="inline-flex items-center text-emerald-600 hover:text-emerald-800 font-medium text-sm hover:underline"
+                  >
+                    View {pendingProjects.length - 5} more projects
+                    <FaArrowUp className="w-3 h-3 ml-1 transform rotate-45" />
+                  </Link>
+                </div>
+              )}
+            </div>
+
+            {/* Pending Tasks */}
+            <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-gradient-to-br from-amber-500 to-orange-500 rounded-lg">
+                    <FaTasks className="w-5 h-5 text-white" />
+                  </div>
+                  <h2 className="text-xl font-bold text-gray-900">Pending Tasks</h2>
+                </div>
+                <span className="px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-sm font-medium">
+                  {pendingTasks.length} total
+                </span>
+              </div>
+              <div className="overflow-hidden rounded-xl border border-gray-100">
+                <table className="min-w-full">
+                  <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Task</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Priority</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Due Date</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-100">
+                    {pendingTasks.slice(0, 5).map((task, index) => (
+                      <tr key={task.id} className="hover:bg-gray-50 transition-colors duration-200">
+                        <td className="px-4 py-4">
+                          <div className="text-sm font-medium text-gray-900">{task.title}</div>
+                          <div className="text-sm text-gray-500">{task.client_name}</div>
+                        </td>
+                        <td className="px-4 py-4">
+                          <span className={`px-3 py-1 text-xs font-medium rounded-full border ${getPriorityColor(task.priority)}`}>
+                            {task.priority}
+                          </span>
+                        </td>
+                        <td className="px-4 py-4">
+                          <div className={`text-sm font-medium ${
+                            new Date(task.due_date) < new Date() ? 'text-red-600' : 'text-gray-900'
+                          }`}>
+                            {new Date(task.due_date).toLocaleDateString()}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              {pendingTasks.length > 5 && (
+                <div className="mt-4 text-center">
+                  <Link 
+                    to="/tasks" 
+                    className="inline-flex items-center text-amber-600 hover:text-amber-800 font-medium text-sm hover:underline"
+                  >
+                    View {pendingTasks.length - 5} more tasks
+                    <FaArrowUp className="w-3 h-3 ml-1 transform rotate-45" />
+                  </Link>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Upcoming Items */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Upcoming Projects */}
+            <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg">
+                    <FaCalendarAlt className="w-5 h-5 text-white" />
+                  </div>
+                  <h2 className="text-xl font-bold text-gray-900">Upcoming Projects</h2>
+                </div>
+                <Link 
+                  to="/projects" 
+                  className="text-blue-600 hover:text-blue-800 font-medium text-sm hover:underline"
+                >
+                  View All
+                </Link>
+              </div>
+              {upcomingProjects.length === 0 ? (
+                <div className="text-center py-12">
+                  <div className="p-4 bg-gradient-to-br from-emerald-100 to-emerald-200 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center">
+                    <FaCheckCircle className="w-10 h-10 text-emerald-600" />
+                  </div>
+                  <p className="text-gray-600 font-medium">All caught up!</p>
+                  <p className="text-gray-500 text-sm mt-1">No projects to start or due soon</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {upcomingProjects.map((project, index) => (
+                    <div key={project.id} className={`group p-4 rounded-xl border-2 transition-all duration-200 hover:shadow-md ${
+                      project.status === 'not_started' 
+                        ? 'bg-gradient-to-r from-gray-50 to-slate-50 border-gray-200 hover:border-gray-300' 
+                        : 'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200 hover:border-blue-300'
+                    }`}>
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-gray-900 group-hover:text-gray-700">{project.title}</h3>
+                          <p className="text-sm text-gray-600 mt-1">{project.client_name}</p>
+                          <p className={`text-sm mt-2 font-medium ${
+                            project.status === 'not_started' 
+                              ? 'text-gray-600' 
+                              : 'text-blue-600'
+                          }`}>
+                            {project.status === 'not_started' 
+                              ? '🚀 Ready to start' 
+                              : `📅 Due: ${project.end_date ? new Date(project.end_date).toLocaleDateString() : 'Not set'}`
+                            }
+                          </p>
+                        </div>
+                        <div className="flex items-center space-x-3">
+                          <span className={`px-3 py-1 text-xs font-medium rounded-full border ${getStatusColor(project.status)}`}>
+                            {project.status.replace('_', ' ')}
+                          </span>
+                          <Link 
+                            to="/projects" 
+                            className="p-2 text-gray-400 hover:text-blue-600 transition-colors duration-200 hover:bg-blue-50 rounded-lg"
+                          >
+                            <FaEye className="w-4 h-4" />
+                          </Link>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Upcoming Tasks */}
+            <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-gradient-to-br from-orange-500 to-red-500 rounded-lg">
+                    <FaFireAlt className="w-5 h-5 text-white" />
+                  </div>
+                  <h2 className="text-xl font-bold text-gray-900">Upcoming Tasks</h2>
+                </div>
+                <Link 
+                  to="/tasks" 
+                  className="text-orange-600 hover:text-orange-800 font-medium text-sm hover:underline"
+                >
+                  View All
+                </Link>
+              </div>
+              {upcomingTasks.length === 0 ? (
+                <div className="text-center py-12">
+                  <div className="p-4 bg-gradient-to-br from-emerald-100 to-emerald-200 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center">
+                    <FaCheckCircle className="w-10 h-10 text-emerald-600" />
+                  </div>
+                  <p className="text-gray-600 font-medium">All tasks handled!</p>
+                  <p className="text-gray-500 text-sm mt-1">No tasks to start or due soon</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {upcomingTasks.map((task, index) => (
+                    <div key={task.id} className={`group p-4 rounded-xl border-2 transition-all duration-200 hover:shadow-md ${
+                      task.status === 'not_started' 
+                        ? 'bg-gradient-to-r from-gray-50 to-slate-50 border-gray-200 hover:border-gray-300'
+                        : task.status === 'pending' 
+                        ? 'bg-gradient-to-r from-orange-50 to-amber-50 border-orange-200 hover:border-orange-300' 
+                        : 'bg-gradient-to-r from-yellow-50 to-amber-50 border-yellow-200 hover:border-yellow-300'
+                    }`}>
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-gray-900 group-hover:text-gray-700">{task.title}</h3>
+                          <p className="text-sm text-gray-600 mt-1">{task.client_name}</p>
+                          <p className={`text-sm mt-2 font-medium ${
+                            task.status === 'not_started' 
+                              ? 'text-gray-600'
+                              : task.status === 'pending' 
+                              ? 'text-orange-600' 
+                              : 'text-amber-600'
+                          }`}>
+                            {task.status === 'not_started' 
+                              ? '🚀 Ready to start' 
+                              : task.status === 'pending'
+                              ? '⏳ Waiting to begin'
+                              : `📅 Due: ${new Date(task.due_date).toLocaleDateString()}`
+                            }
+                          </p>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <span className={`px-2 py-1 text-xs font-medium rounded-full border ${getPriorityColor(task.priority)}`}>
+                            {task.priority}
+                          </span>
+                          <span className={`px-2 py-1 text-xs font-medium rounded-full border ${getStatusColor(task.status)}`}>
+                            {task.status.replace('_', ' ')}
+                          </span>
+                          <Link 
+                            to="/tasks" 
+                            className="p-2 text-gray-400 hover:text-orange-600 transition-colors duration-200 hover:bg-orange-50 rounded-lg"
+                          >
+                            <FaEye className="w-4 h-4" />
+                          </Link>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Financial Overview */}
+          {financialData && (
+            <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300">
+              <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-gradient-to-br from-purple-500 to-pink-600 rounded-lg">
+                    <FaChartLine className="w-5 h-5 text-white" />
+                  </div>
+                  <h2 className="text-xl font-bold text-gray-900">Financial Overview</h2>
+                </div>
+                <div className="flex items-center gap-4">
+                  <select
+                    value={timeFilter}
+                    onChange={(e) => setTimeFilter(e.target.value)}
+                    className="px-4 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  >
+                    <option value="monthly">Monthly</option>
+                    <option value="quarterly">Quarterly</option>
+                    <option value="yearly">Yearly</option>
+                  </select>
+                  <Link 
+                    to="/finances" 
+                    className="inline-flex items-center text-purple-600 hover:text-purple-800 font-medium text-sm hover:underline"
+                  >
+                    View Details
+                    <FaEye className="w-4 h-4 ml-1" />
+                  </Link>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="group bg-gradient-to-br from-emerald-50 to-green-100 rounded-2xl p-6 border border-emerald-200 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
+                  <div className="flex items-center justify-center mb-4">
+                    <div className="p-3 bg-gradient-to-br from-emerald-500 to-green-600 rounded-xl shadow-lg">
+                      <FaArrowUp className="w-6 h-6 text-white" />
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-sm font-semibold text-emerald-700 mb-2">Total Income</p>
+                    <p className="text-2xl font-bold text-emerald-800">
+                      {formatCurrency(financialData.grossIncome)}
+                    </p>
+                  </div>
+                </div>
+                <div className="group bg-gradient-to-br from-red-50 to-pink-100 rounded-2xl p-6 border border-red-200 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
+                  <div className="flex items-center justify-center mb-4">
+                    <div className="p-3 bg-gradient-to-br from-red-500 to-pink-600 rounded-xl shadow-lg">
+                      <FaArrowDown className="w-6 h-6 text-white" />
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-sm font-semibold text-red-700 mb-2">Total Expenses</p>
+                    <p className="text-2xl font-bold text-red-800">
+                      {formatCurrency(financialData.totalExpenses)}
+                    </p>
+                  </div>
+                </div>
+                <div className="group bg-gradient-to-br from-blue-50 to-indigo-100 rounded-2xl p-6 border border-blue-200 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
+                  <div className="flex items-center justify-center mb-4">
+                                         <div className="p-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl shadow-lg">
+                       <FaChartLine className="w-6 h-6 text-white" />
+                     </div>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-sm font-semibold text-blue-700 mb-2">Net Profit</p>
+                    <p className="text-2xl font-bold text-blue-800">
+                      {formatCurrency(financialData.totalIncome)}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              {financialData.pendingInvoices.count > 0 && (
+                <div className="mt-8 p-6 bg-gradient-to-r from-amber-50 to-yellow-100 rounded-2xl border border-amber-200 hover:shadow-lg transition-all duration-300">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-gradient-to-br from-amber-500 to-yellow-600 rounded-lg">
+                        <FaClock className="w-5 h-5 text-white" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-amber-800">Pending Invoices</p>
+                        <p className="text-sm text-amber-700">
+                          {financialData.pendingInvoices.count} invoice(s) worth {formatCurrency(financialData.pendingInvoices.total)}
+                        </p>
+                      </div>
+                    </div>
+                    <Link 
+                      to="/finances?filter=pending" 
+                      className="px-4 py-2 bg-amber-600 text-white rounded-xl hover:bg-amber-700 font-medium text-sm transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                    >
+                      View Invoices
+                    </Link>
+                  </div>
+                </div>
+              )}
+            </div>
           )}
         </div>
-      )}
+      </div>
     </div>
   );
 };

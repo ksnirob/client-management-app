@@ -187,7 +187,7 @@ class Project {
 
       // Create project
       const [result] = await db.execute(
-        'INSERT INTO projects (title, description, client_id, status, start_date, end_date, budget, project_live_url, project_files, admin_login_url, username_email, password) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        'INSERT INTO projects (title, description, client_id, status, start_date, end_date, budget, project_live_url, project_files, admin_login_url, username_email, password, hosting_login_url, hosting_username_email, hosting_password) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
         [
           projectData.title,
           projectData.description || null,
@@ -200,7 +200,10 @@ class Project {
           projectData.project_files || null,
           projectData.admin_login_url || null,
           projectData.username_email || null,
-          projectData.password || null
+          projectData.password || null,
+          projectData.hosting_login_url || null,
+          projectData.hosting_username_email || null,
+          projectData.hosting_password || null
         ]
       );
       
@@ -298,6 +301,9 @@ class Project {
             admin_login_url = ?,
             username_email = ?,
             password = ?,
+            hosting_login_url = ?,
+            hosting_username_email = ?,
+            hosting_password = ?,
             updated_at = NOW()
         WHERE id = ?
       `;
@@ -315,6 +321,9 @@ class Project {
         projectData.admin_login_url !== undefined ? projectData.admin_login_url : existingProject[0].admin_login_url,
         projectData.username_email !== undefined ? projectData.username_email : existingProject[0].username_email,
         projectData.password !== undefined ? projectData.password : existingProject[0].password,
+        projectData.hosting_login_url !== undefined ? projectData.hosting_login_url : existingProject[0].hosting_login_url,
+        projectData.hosting_username_email !== undefined ? projectData.hosting_username_email : existingProject[0].hosting_username_email,
+        projectData.hosting_password !== undefined ? projectData.hosting_password : existingProject[0].hosting_password,
         id
       ];
 

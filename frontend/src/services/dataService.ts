@@ -65,6 +65,9 @@ export interface Project {
   admin_login_url?: string;
   username_email?: string;
   password?: string;
+  hosting_login_url?: string;
+  hosting_username_email?: string;
+  hosting_password?: string;
   // Budget calculation fields
   static_budget?: number;
   total_payments?: number;

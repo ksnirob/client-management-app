@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaFileInvoice, FaMoneyBillWave, FaChartLine, FaFilter, FaPlus } from 'react-icons/fa';
+import { FaFileInvoice, FaMoneyBillWave, FaChartLine, FaFilter, FaPlus, FaDollarSign, FaSpinner, FaExclamationTriangle, FaCheckCircle, FaCalendarAlt, FaProjectDiagram, FaCreditCard, FaReceipt, FaTrash, FaEdit, FaArrowUp, FaArrowDown, FaClock, FaEye } from 'react-icons/fa';
 import { financeService, Transaction, FinancialSummary, TransactionFilters } from '../services/financeService';
 // @ts-ignore
 import { projectService } from '../services/projectService';
@@ -162,26 +162,39 @@ const Finances: React.FC = () => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'completed':
-        return 'bg-green-100 text-green-800';
+        return 'bg-emerald-100 text-emerald-800 border-emerald-200';
       case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-amber-100 text-amber-800 border-amber-200';
       case 'cancelled':
-        return 'bg-red-100 text-red-800';
+        return 'bg-red-100 text-red-800 border-red-200';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
 
   const getTypeColor = (type: string) => {
     switch (type) {
       case 'invoice':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-blue-100 text-blue-800 border-blue-200';
       case 'payment':
-        return 'bg-green-100 text-green-800';
+        return 'bg-emerald-100 text-emerald-800 border-emerald-200';
       case 'expense':
-        return 'bg-red-100 text-red-800';
+        return 'bg-red-100 text-red-800 border-red-200';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
+  };
+
+  const getTypeIcon = (type: string) => {
+    switch (type) {
+      case 'invoice':
+        return <FaFileInvoice className="w-3 h-3" />;
+      case 'payment':
+        return <FaCreditCard className="w-3 h-3" />;
+      case 'expense':
+        return <FaReceipt className="w-3 h-3" />;
+      default:
+        return <FaDollarSign className="w-3 h-3" />;
     }
   };
 
@@ -198,317 +211,431 @@ const Finances: React.FC = () => {
     });
   };
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-emerald-50 to-green-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="relative">
+            <div className="w-20 h-20 border-4 border-emerald-200 rounded-full animate-spin border-t-emerald-600 mx-auto mb-6"></div>
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+              <div className="w-8 h-8 bg-emerald-600 rounded-full animate-pulse"></div>
+            </div>
+          </div>
+          <div className="text-xl font-semibold text-gray-700 mb-2">Loading Financial Data</div>
+          <div className="text-sm text-gray-500">Calculating your finances...</div>
+        </div>
+      </div>
+    );
+  }
+
   if (error) {
     return (
-      <div className="p-6">
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative" role="alert">
-          <strong className="font-bold">Error: </strong>
-          <span className="block sm:inline">{error}</span>
+      <div className="min-h-screen bg-gradient-to-br from-red-50 via-pink-50 to-rose-100 flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto p-8">
+          <div className="bg-white rounded-2xl shadow-xl p-8">
+            <FaExclamationTriangle className="text-5xl text-red-500 mx-auto mb-6" />
+            <div className="text-xl font-semibold text-gray-800 mb-4">Financial Data Error</div>
+            <div className="text-gray-600 mb-6">{error}</div>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-6 py-3 bg-gradient-to-r from-red-500 to-pink-600 text-white rounded-xl hover:from-red-600 hover:to-pink-700 transition-all duration-200 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+            >
+              Try Again
+            </button>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-gray-900">Finances</h1>
-        <div className="flex items-center gap-3">
-          <div className="flex flex-col items-end">
-            <CurrencySwitcher 
-              currentCurrency={currentCurrency}
-              onCurrencyChange={setCurrentCurrency}
-            />
-            {currentCurrency === 'BDT' && (
-              <span className="text-xs text-gray-500 mt-1">
-                Rate: 1 USD = 120 BDT
-              </span>
-            )}
-          </div>
-          <button
-            onClick={() => setShowFilters(!showFilters)}
-            className="flex items-center gap-2 px-4 py-2 bg-white border rounded-md hover:bg-gray-50"
-          >
-            <FaFilter />
-            <span>Filters</span>
-          </button>
-          <button
-            onClick={() => setShowNewTransactionModal(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700"
-          >
-            <FaPlus />
-            <span>New Transaction</span>
-          </button>
-        </div>
-      </div>
-
-      {showFilters && (
-        <div className="bg-white p-4 rounded-lg shadow space-y-4">
-          <div className="grid grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Transaction Type</label>
-              <select
-                value={filterType}
-                onChange={(e) => setFilterType(e.target.value as any)}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-emerald-50 to-green-100">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="space-y-8">
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+            <div className="space-y-2">
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 via-emerald-800 to-green-800 bg-clip-text text-transparent">
+                Finances
+              </h1>
+              <p className="text-lg text-gray-600">Monitor your financial performance and transactions</p>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="flex flex-col items-end">
+                <CurrencySwitcher 
+                  currentCurrency={currentCurrency}
+                  onCurrencyChange={setCurrentCurrency}
+                />
+                {currentCurrency === 'BDT' && (
+                  <span className="text-xs text-gray-500 mt-1">
+                    Rate: 1 USD = 120 BDT
+                  </span>
+                )}
+              </div>
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                className={`flex items-center gap-2 px-4 py-2.5 bg-white text-gray-700 rounded-xl border border-gray-200 hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 font-medium shadow-sm hover:shadow-md transform hover:-translate-y-0.5 ${
+                  showFilters ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : ''
+                }`}
               >
-                <option value="all">All Transactions</option>
-                <option value="invoice">Invoices</option>
-                <option value="payment">Payments</option>
-                <option value="expense">Expenses</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Start Date</label>
-              <input
-                type="date"
-                value={dateRange.start}
-                onChange={(e) => setDateRange(prev => ({ ...prev, start: e.target.value }))}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">End Date</label>
-              <input
-                type="date"
-                value={dateRange.end}
-                onChange={(e) => setDateRange(prev => ({ ...prev, end: e.target.value }))}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
-              />
+                <FaFilter className="w-4 h-4" />
+                Filters
+              </button>
+              <button
+                onClick={() => setShowNewTransactionModal(true)}
+                className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-emerald-600 to-green-600 text-white rounded-xl hover:from-emerald-700 hover:to-green-700 transition-all duration-200 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+              >
+                <FaPlus className="w-4 h-4" />
+                New Transaction
+              </button>
             </div>
           </div>
-        </div>
-      )}
 
-      {showNewTransactionModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
-            <h2 className="text-xl font-semibold mb-4">New Transaction</h2>
-            <form onSubmit={handleCreateTransaction}>
-              <div className="space-y-4">
+          {/* Filters */}
+          {showFilters && (
+            <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-2 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-lg">
+                  <FaFilter className="w-5 h-5 text-white" />
+                </div>
+                <h2 className="text-xl font-bold text-gray-900">Filter Transactions</h2>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Type</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Transaction Type</label>
                   <select
-                    value={newTransaction.type}
-                    onChange={(e) => setNewTransaction({...newTransaction, type: e.target.value})}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
-                    required
+                    value={filterType}
+                    onChange={(e) => setFilterType(e.target.value as any)}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500 focus:ring-opacity-50 transition-all duration-200"
                   >
-                    <option value="invoice">Invoice</option>
-                    <option value="payment">Payment</option>
-                    <option value="expense">Expense</option>
+                    <option value="all">All Transactions</option>
+                    <option value="invoice">Invoices</option>
+                    <option value="payment">Payments</option>
+                    <option value="expense">Expenses</option>
                   </select>
                 </div>
-                
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Project *</label>
-                  <select
-                    value={newTransaction.project_id}
-                    onChange={(e) => setNewTransaction({...newTransaction, project_id: e.target.value})}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
-                    required
-                  >
-                    <option value="">Select a project</option>
-                    {projects.map(project => (
-                      <option key={project.id} value={project.id}>
-                        {project.title}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Amount ({currentCurrency === 'USD' ? '$' : '৳'})
-                  </label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={newTransaction.amount}
-                    onChange={(e) => setNewTransaction({...newTransaction, amount: e.target.value})}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
-                    required
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Description</label>
-                  <textarea
-                    value={newTransaction.description}
-                    onChange={(e) => setNewTransaction({...newTransaction, description: e.target.value})}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
-                    required
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Date</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Start Date</label>
                   <input
                     type="date"
-                    value={newTransaction.date}
-                    onChange={(e) => setNewTransaction({...newTransaction, date: e.target.value})}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
-                    required
+                    value={dateRange.start}
+                    onChange={(e) => setDateRange(prev => ({ ...prev, start: e.target.value }))}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500 focus:ring-opacity-50 transition-all duration-200"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">End Date</label>
+                  <input
+                    type="date"
+                    value={dateRange.end}
+                    onChange={(e) => setDateRange(prev => ({ ...prev, end: e.target.value }))}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500 focus:ring-opacity-50 transition-all duration-200"
                   />
                 </div>
               </div>
-              
-              <div className="mt-6 flex justify-end space-x-3">
+            </div>
+          )}
+
+          {/* Transaction Modal */}
+          {showNewTransactionModal && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+              <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+                <div className="p-6 border-b border-gray-100">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-lg">
+                      <FaPlus className="w-5 h-5 text-white" />
+                    </div>
+                    <h2 className="text-xl font-bold text-gray-900">New Transaction</h2>
+                  </div>
+                </div>
+                <form onSubmit={handleCreateTransaction} className="p-6">
+                  <div className="space-y-6">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Type</label>
+                      <select
+                        value={newTransaction.type}
+                        onChange={(e) => setNewTransaction({...newTransaction, type: e.target.value})}
+                        className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500 focus:ring-opacity-50 transition-all duration-200"
+                        required
+                      >
+                        <option value="invoice">Invoice</option>
+                        <option value="payment">Payment</option>
+                        <option value="expense">Expense</option>
+                      </select>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Project *</label>
+                      <select
+                        value={newTransaction.project_id}
+                        onChange={(e) => setNewTransaction({...newTransaction, project_id: e.target.value})}
+                        className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500 focus:ring-opacity-50 transition-all duration-200"
+                        required
+                      >
+                        <option value="">Select a project</option>
+                        {projects.map(project => (
+                          <option key={project.id} value={project.id}>
+                            {project.title}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Amount ({currentCurrency === 'USD' ? '$' : '৳'})
+                      </label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={newTransaction.amount}
+                        onChange={(e) => setNewTransaction({...newTransaction, amount: e.target.value})}
+                        className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500 focus:ring-opacity-50 transition-all duration-200"
+                        required
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Description</label>
+                      <textarea
+                        value={newTransaction.description}
+                        onChange={(e) => setNewTransaction({...newTransaction, description: e.target.value})}
+                        className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500 focus:ring-opacity-50 transition-all duration-200"
+                        rows={3}
+                        required
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Date</label>
+                      <input
+                        type="date"
+                        value={newTransaction.date}
+                        onChange={(e) => setNewTransaction({...newTransaction, date: e.target.value})}
+                        className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500 focus:ring-opacity-50 transition-all duration-200"
+                        required
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="mt-8 flex justify-end space-x-3">
+                    <button
+                      type="button"
+                      onClick={() => setShowNewTransactionModal(false)}
+                      className="px-6 py-3 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 font-medium"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-6 py-3 bg-gradient-to-r from-emerald-600 to-green-600 text-white rounded-xl hover:from-emerald-700 hover:to-green-700 transition-all duration-200 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                    >
+                      Create Transaction
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="group bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 overflow-hidden relative">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-full opacity-10 transform translate-x-8 -translate-y-8"></div>
+              <div className="relative">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="p-3 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl shadow-lg">
+                    <FaArrowUp className="w-6 h-6 text-white" />
+                  </div>
+                  <div className="text-right">
+                    <p className="text-3xl font-bold text-emerald-600">{formatCurrency(summary.totalIncome)}</p>
+                    <p className="text-sm text-gray-500">Net Income</p>
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <div className="text-xs text-gray-600">Gross: {formatCurrency(summary.grossIncome)}</div>
+                  <div className="text-xs text-gray-600">Expenses: {formatCurrency(summary.totalExpenses)}</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="group bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 overflow-hidden relative">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-red-400 to-red-600 rounded-full opacity-10 transform translate-x-8 -translate-y-8"></div>
+              <div className="relative">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="p-3 bg-gradient-to-br from-red-500 to-red-600 rounded-xl shadow-lg">
+                    <FaArrowDown className="w-6 h-6 text-white" />
+                  </div>
+                  <div className="text-right">
+                    <p className="text-3xl font-bold text-red-600">{formatCurrency(summary.totalExpenses)}</p>
+                    <p className="text-sm text-gray-500">Total Expenses</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <FaChartLine className="w-4 h-4 text-emerald-500" />
+                  <span className="text-sm text-emerald-600 font-medium">Monthly: {formatCurrency(summary.monthlyRevenue)}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="group bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 overflow-hidden relative">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-amber-400 to-amber-600 rounded-full opacity-10 transform translate-x-8 -translate-y-8"></div>
+              <div className="relative">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="p-3 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl shadow-lg">
+                    <FaClock className="w-6 h-6 text-white" />
+                  </div>
+                  <div className="text-right">
+                    <p className="text-3xl font-bold text-amber-600">{summary.pendingInvoices.count}</p>
+                    <p className="text-sm text-gray-500">Pending Invoices</p>
+                  </div>
+                </div>
+                <div className="text-sm">
+                  <span className="text-gray-600">Total Value: </span>
+                  <span className="text-amber-600 font-semibold">{formatCurrency(summary.pendingInvoices.total)}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="group bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 overflow-hidden relative">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full opacity-10 transform translate-x-8 -translate-y-8"></div>
+              <div className="relative">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="p-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg">
+                    <FaProjectDiagram className="w-6 h-6 text-white" />
+                  </div>
+                  <div className="text-right">
+                    <p className="text-3xl font-bold text-blue-600">{formatCurrency(summary.totalBudgets)}</p>
+                    <p className="text-sm text-gray-500">Project Budgets</p>
+                  </div>
+                </div>
+                <div className="text-sm">
+                  <span className="text-gray-600">Active Projects: </span>
+                  <span className="text-blue-600 font-semibold">{projects.length}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Transactions Table */}
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-gray-100">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-lg">
+                    <FaChartLine className="w-5 h-5 text-white" />
+                  </div>
+                  <h2 className="text-xl font-bold text-gray-900">Recent Transactions</h2>
+                </div>
+                <span className="text-sm text-gray-500 bg-white px-3 py-1 rounded-full border">
+                  Amounts in {currentCurrency}
+                </span>
+              </div>
+            </div>
+
+            {summary.recentTransactions.length === 0 ? (
+              <div className="text-center py-16">
+                <div className="p-6 bg-gradient-to-br from-emerald-100 to-emerald-200 rounded-full w-24 h-24 mx-auto mb-6 flex items-center justify-center">
+                  <FaChartLine className="w-12 h-12 text-emerald-600" />
+                </div>
+                <h3 className="text-xl font-semibold text-gray-700 mb-2">No transactions yet</h3>
+                <p className="text-gray-500 mb-6">Start tracking your finances by creating your first transaction</p>
                 <button
-                  type="button"
-                  onClick={() => setShowNewTransactionModal(false)}
-                  className="px-4 py-2 border rounded-md text-gray-700 hover:bg-gray-50"
+                  onClick={() => setShowNewTransactionModal(true)}
+                  className="px-6 py-3 bg-gradient-to-r from-emerald-600 to-green-600 text-white rounded-xl hover:from-emerald-700 hover:to-green-700 transition-all duration-200 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
                 >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700"
-                >
-                  Create
+                  Create First Transaction
                 </button>
               </div>
-            </form>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="min-w-full">
+                  <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
+                    <tr>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        <div className="flex items-center gap-2">
+                          <FaCalendarAlt className="w-4 h-4" />
+                          Date
+                        </div>
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        <div className="flex items-center gap-2">
+                          <FaFileInvoice className="w-4 h-4" />
+                          Description
+                        </div>
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Type</th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
+                      <th className="px-6 py-4 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        <div className="flex items-center justify-end gap-2">
+                          <FaDollarSign className="w-4 h-4" />
+                          Amount
+                        </div>
+                      </th>
+                      <th className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-100">
+                    {summary.recentTransactions.map((transaction) => (
+                      <tr key={transaction.id} className="hover:bg-gradient-to-r hover:from-emerald-50 hover:to-green-50 transition-all duration-200">
+                        <td className="px-6 py-5">
+                          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 border border-gray-200">
+                            <FaCalendarAlt className="w-3 h-3 mr-1" />
+                            {formatDate(transaction.date)}
+                          </span>
+                        </td>
+                        <td className="px-6 py-5">
+                          <div>
+                            <div className="text-sm font-semibold text-gray-900">{transaction.description}</div>
+                            {transaction.project_title && (
+                              <div className="inline-flex items-center mt-1 px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200">
+                                <FaProjectDiagram className="w-3 h-3 mr-1" />
+                                {transaction.project_title}
+                              </div>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-6 py-5">
+                          <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${getTypeColor(transaction.type)}`}>
+                            {getTypeIcon(transaction.type)}
+                            <span className="ml-1">{transaction.type}</span>
+                          </span>
+                        </td>
+                        <td className="px-6 py-5">
+                          <select
+                            value={transaction.status}
+                            onChange={(e) => handleUpdateStatus(transaction.id, e.target.value)}
+                            className={`px-3 py-1 text-xs font-medium rounded-full border cursor-pointer transition-all duration-200 ${getStatusColor(transaction.status)}`}
+                          >
+                            <option value="pending">Pending</option>
+                            <option value="completed">Completed</option>
+                            <option value="cancelled">Cancelled</option>
+                          </select>
+                        </td>
+                        <td className="px-6 py-5 text-right">
+                          <span className={`font-bold text-lg ${
+                            transaction.type === 'expense' ? 'text-red-600' : 'text-emerald-600'
+                          }`}>
+                            {transaction.type === 'expense' ? '-' : '+'}{formatCurrency(transaction.amount)}
+                          </span>
+                        </td>
+                        <td className="px-6 py-5 text-center">
+                          <button
+                            onClick={() => handleDeleteTransaction(transaction.id)}
+                            className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-all duration-200 transform hover:-translate-y-0.5"
+                            title="Delete transaction"
+                          >
+                            <FaTrash className="w-4 h-4" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
-        </div>
-      )}
-
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Net Income</p>
-              <p className="text-2xl font-bold text-green-600">{formatCurrency(summary.totalIncome)}</p>
-            </div>
-            <div className="p-3 bg-green-100 rounded-full">
-              <FaMoneyBillWave className="w-6 h-6 text-green-600" />
-            </div>
-          </div>
-          <div className="mt-4">
-            <div className="text-sm text-gray-600">Gross Income: {formatCurrency(summary.grossIncome)}</div>
-            <div className="text-sm text-gray-600">Total Expenses: {formatCurrency(summary.totalExpenses)}</div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Total Expenses</p>
-              <p className="text-2xl font-bold text-red-600">{formatCurrency(summary.totalExpenses)}</p>
-            </div>
-            <div className="p-3 bg-red-100 rounded-full">
-              <FaFileInvoice className="w-6 h-6 text-red-600" />
-            </div>
-          </div>
-          <div className="mt-4">
-            <div className="text-sm text-gray-600">Monthly Revenue</div>
-            <div className="flex items-center">
-              <FaChartLine className="w-4 h-4 text-green-500 mr-1" />
-              <span className="text-green-500">{formatCurrency(summary.monthlyRevenue)}</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Pending Invoices</p>
-              <p className="text-2xl font-bold text-yellow-600">{summary.pendingInvoices.count}</p>
-            </div>
-            <div className="p-3 bg-yellow-100 rounded-full">
-              <FaFileInvoice className="w-6 h-6 text-yellow-600" />
-            </div>
-          </div>
-          <div className="mt-4">
-            <div className="text-sm text-gray-600">Total Value</div>
-            <div className="text-yellow-600 font-medium">{formatCurrency(summary.pendingInvoices.total)}</div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Total Project Budgets</p>
-              <p className="text-2xl font-bold text-blue-600">{formatCurrency(summary.totalBudgets)}</p>
-            </div>
-            <div className="p-3 bg-blue-100 rounded-full">
-              <FaChartLine className="w-6 h-6 text-blue-600" />
-            </div>
-          </div>
-          <div className="mt-4">
-            <div className="text-sm text-gray-600">Active Projects</div>
-            <div className="text-blue-600 font-medium">{projects.length} Projects</div>
-          </div>
-        </div>
-      </div>
-
-      <div className="bg-white rounded-lg shadow">
-        <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-          <h2 className="text-lg font-medium text-gray-900">Recent Transactions</h2>
-          <span className="text-sm text-gray-500">
-            Amounts shown in {currentCurrency}
-          </span>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {summary.recentTransactions.map((transaction) => (
-                <tr key={transaction.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {formatDate(transaction.date)}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-900">
-                    <div>{transaction.description}</div>
-                    {transaction.project_title && (
-                      <div className="text-sm font-medium text-blue-600 mt-1">
-                        Project: {transaction.project_title}
-                      </div>
-                    )}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${getTypeColor(transaction.type)}`}>
-                      {transaction.type}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <select
-                      value={transaction.status}
-                      onChange={(e) => handleUpdateStatus(transaction.id, e.target.value)}
-                      className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(transaction.status)} border-0 cursor-pointer`}
-                    >
-                      <option value="pending">Pending</option>
-                      <option value="completed">Completed</option>
-                      <option value="cancelled">Cancelled</option>
-                    </select>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-right">
-                    <span className={transaction.type === 'expense' || transaction.type === 'invoice' ? 'text-red-600' : 'text-green-600'}>
-                      {formatCurrency(transaction.amount)}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <button
-                      onClick={() => handleDeleteTransaction(transaction.id)}
-                      className="text-red-600 hover:text-red-900"
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
         </div>
       </div>
     </div>
